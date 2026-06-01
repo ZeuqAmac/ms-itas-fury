@@ -1,0 +1,12 @@
+# Imágenes fuente / de referencia: el arte del juego se genera por código,
+# así que NO hacen falta para publicar (mantienen el deploy ligero).
+/Ita Ita.png
+/Lucky.png
+/escenario*.jpg
+/escenario.png
+/assets/
+
+# Basura del sistema / temporales
+.DS_Store
+Thumbs.db
+*.log
