@@ -6,6 +6,14 @@ Juego **run-and-gun estilo Metal Slug, ambientado en Sinaloa**, hecho con
 chaleco guindo). Todo el arte de juego se **genera por código** (pixel-art);
 las imágenes originales solo se usan como póster en menús.
 
+## Despliegue (en línea)
+- **Repo:** https://github.com/ZeuqAmac/ms-itas-fury  (rama `main`)
+- **Live (Netlify):** https://msitafury.netlify.app/
+- **Actualizar:** `git push` a `main` → Netlify **republica solo** (build vacío,
+  publish dir = raíz). Rollback desde el panel de Netlify (Deploys → publicar
+  un deploy anterior).
+- El arte se genera por código → el deploy no incluye imágenes (rápido).
+
 ## Cómo correr (importante)
 - **No hay Node ni Python** en esta máquina. No se usa npm ni bundler.
 - Phaser viene por **CDN** en `index.html`. Scripts cargados como `<script>`
