@@ -116,8 +116,9 @@ Al acabar munición vuelve a Escuadra.
 
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).
-- **Más enemigos / variedad**: chairo con cuerno.
-- **Más enemigos / variedad**: chairo con cuerno.
+- **Más enemigos / variedad**: chairo con cuerno y otros tipos.
+- **Más niveles / variedad de escenarios** (nuevos temas, peligros y props).
+- **Pantalla de puntajes / récord** (guardar mejor puntaje con localStorage).
 - **Enemigos en plataformas** (ahora solo andan en el suelo).
 - **Balance**: dificultad, cantidad de enemigos, vida.
 - **Nivel 2**: revisar a fondo (probado poco).
