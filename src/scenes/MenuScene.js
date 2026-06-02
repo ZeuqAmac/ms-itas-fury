@@ -78,7 +78,18 @@ class MenuScene extends Phaser.Scene {
     this.input.keyboard.once('keydown-ENTER', go);
     this.input.keyboard.once('keydown-SPACE', go);
     this.input.once('pointerdown', go);
-    if (this.input.gamepad) this.input.gamepad.once('down', go);   // cualquier botón del control
+
+    // Aviso de control detectado (Gamepad API): confirma que el navegador lo ve.
+    const padTxt = this.add.text(W / 2, H - 62, '', {
+      fontFamily: 'Trebuchet MS', fontStyle: 'bold', fontSize: '15px', color: '#9fe9ff',
+      stroke: '#000', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(40);
+    const showPad = () => padTxt.setText('🎮 ¡Control detectado! Presiona un botón para empezar');
+    if (this.input.gamepad) {
+      if (this.input.gamepad.total > 0) showPad();
+      this.input.gamepad.once('connected', showPad);
+      this.input.gamepad.once('down', go);   // cualquier botón del control
+    }
   }
 }
 
