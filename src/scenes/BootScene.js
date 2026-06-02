@@ -8,8 +8,10 @@ class BootScene extends Phaser.Scene {
   create() {
     this.genBullets();
     this.genFx();
+    this.genSlash();
     this.genCrate();
     this.genGround();
+    this.genGroundMalecon();
     this.genGoal();
     this.genGrenade();
     this.genPlatform();
@@ -62,6 +64,28 @@ class BootScene extends Phaser.Scene {
     g.destroy();
   }
 
+  // --- Tajo de cuchillo (medialuna estilo Metal Slug) ---
+  genSlash() {
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    const cx = 30, cy = 32, r = 24;
+    const a0 = Phaser.Math.DegToRad(-74), a1 = Phaser.Math.DegToRad(74);
+    // contorno oscuro
+    g.lineStyle(11, 0x10151c, 1);
+    g.beginPath(); g.arc(cx, cy, r, a0, a1, false); g.strokePath();
+    // filo blanco grueso
+    g.lineStyle(8, 0xffffff, 1);
+    g.beginPath(); g.arc(cx, cy, r, a0, a1, false); g.strokePath();
+    // brillo celeste interior
+    g.lineStyle(3, 0x9fe9ff, 1);
+    g.beginPath(); g.arc(cx, cy, r, Phaser.Math.DegToRad(-60), Phaser.Math.DegToRad(60), false); g.strokePath();
+    // destellos en las puntas
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(cx + Math.cos(a0) * r, cy + Math.sin(a0) * r, 4);
+    g.fillCircle(cx + Math.cos(a1) * r, cy + Math.sin(a1) * r, 4);
+    g.generateTexture('slash', 64, 64);
+    g.destroy();
+  }
+
   // --- Caja de pickup ---
   genCrate() {
     const s = 46;
@@ -91,6 +115,26 @@ class BootScene extends Phaser.Scene {
     g.fillStyle(0x55595d, 1);
     g.fillRect(12, 24, 4, 4); g.fillRect(44, 52, 5, 3); g.fillRect(22, 60, 3, 3);
     g.generateTexture('ground', w, h);
+    g.destroy();
+  }
+
+  // --- Suelo del malecón (baldosa clara + arena) ---
+  genGroundMalecon() {
+    const w = 64, h = 80;
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0xe4cd92, 1).fillRect(0, 0, w, h);          // baldosa arenosa
+    g.fillStyle(0xf2dca6, 1).fillRect(0, 0, w, 8);          // superficie clara
+    g.fillStyle(0xc9ad78, 1).fillRect(0, 8, w, 2);
+    // juntas de baldosa
+    g.lineStyle(1, 0xbfa06a, 1);
+    g.beginPath(); g.moveTo(32, 0); g.lineTo(32, h); g.strokePath();
+    g.beginPath(); g.moveTo(0, 40); g.lineTo(w, 40); g.strokePath();
+    // motitas de arena
+    g.fillStyle(0xd8bd84, 1);
+    g.fillRect(12, 22, 3, 3); g.fillRect(45, 52, 4, 3); g.fillRect(22, 60, 3, 3); g.fillRect(50, 18, 3, 3);
+    g.fillStyle(0xf0e0b4, 1);
+    g.fillRect(8, 50, 2, 2); g.fillRect(38, 28, 2, 2); g.fillRect(56, 64, 2, 2);
+    g.generateTexture('ground_malecon', w, h);
     g.destroy();
   }
 

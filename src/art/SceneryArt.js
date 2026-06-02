@@ -10,6 +10,7 @@ const SceneryArt = {
     this._vignette(scene);
     this._sky(scene, 'sky_culiacan', [0x274a6e, 0x6e7f8c, 0xe79a52]);
     this._sky(scene, 'sky_jardin',   [0x6fb0d6, 0x9fc9c0, 0xd9ecb0]);
+    this._sky(scene, 'sky_malecon',  [0x1f8fcf, 0x7fcfe2, 0xffe6ac]);
     this._skyline(scene);
     this._colonial(scene);
     this._market(scene);
@@ -20,6 +21,13 @@ const SceneryArt = {
     this._sandbags(scene);
     this._barrel(scene);
     this._rubble(scene);
+    // --- Malecón de Mazatlán ---
+    this._sea(scene);
+    this._islands(scene);
+    this._faro(scene);
+    this._railing(scene);
+    this._umbrella(scene);
+    this._panga(scene);
   },
 
   // ---------- Sacos terreros (barricada estilo Metal Slug) ----------
@@ -233,11 +241,108 @@ const SceneryArt = {
     });
   },
 
+  // ---------- Mar (banda de oleaje, tileable) ----------
+  _sea(scene) {
+    Pixel.sprite(scene, 'sea', 128, 150, (p, ctx) => {
+      const top = 0x2f74a8, mid = 0x3f93bf, low = 0x5db4d0, foam = 0xbfe6ef;
+      p(top, 0, 0, 128, 46); p(mid, 0, 46, 128, 54); p(low, 0, 100, 128, 50);
+      p(foam, 0, 0, 128, 3);                          // línea de horizonte
+      // crestas de oleaje escalonadas
+      for (let y = 12; y < 150; y += 15) {
+        const off = ((y / 15) % 2) * 12;
+        for (let x = off; x < 128; x += 26) p(foam, x, y, 11, 2);
+      }
+    }, null);
+  },
+
+  // ---------- Islas lejanas (las tres islas de Mazatlán) ----------
+  _islands(scene) {
+    Pixel.sprite(scene, 'islands', 512, 120, (p, ctx) => {
+      const dome = (cx, r, col) => {
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(cx, 120, r, Math.PI, Math.PI * 2); ctx.fill();
+      };
+      dome(120, 70, 'rgba(64,92,108,0.85)');
+      dome(250, 96, 'rgba(54,80,96,0.9)');           // la más grande (Isla de Venados)
+      dome(400, 64, 'rgba(70,98,114,0.82)');
+      // bruma en la base
+      p(0x9fc9d6, 0, 112, 512, 8);
+    }, null);
+  },
+
+  // ---------- Faro de Mazatlán (sobre cerro rocoso) ----------
+  _faro(scene) {
+    Pixel.sprite(scene, 'faro', 96, 250, (p, ctx) => {
+      const rock = 0x6e6256, rockSh = 0x4e463c, rockHi = 0x8a7d6c, green = 0x4f7a3c;
+      const tower = 0xf2efe6, towerSh = 0xccc4b2, red = 0xd23b2e, redSh = 0x9e2a20;
+      const glass = 0xffe9a0, deck = 0x33373a;
+      // cerro
+      ctx.fillStyle = Pixel.col(rock);
+      ctx.beginPath(); ctx.moveTo(0, 250); ctx.lineTo(26, 150); ctx.lineTo(54, 196); ctx.lineTo(96, 250); ctx.fill();
+      p(rockSh, 0, 214, 96, 36);
+      p(rockHi, 22, 152, 8, 36);
+      p(green, 60, 196, 22, 10); p(green, 8, 220, 18, 8);   // matorrales
+      // torre blanca
+      p(tower, 34, 44, 24, 110); p(towerSh, 52, 44, 6, 110);
+      p(tower, 30, 150, 32, 20); p(towerSh, 54, 150, 8, 20);  // base ensanchada
+      // galería
+      p(deck, 30, 36, 32, 10);
+      // linterna (rojo) + vidrio
+      p(red, 34, 16, 24, 20); p(redSh, 52, 16, 6, 20);
+      p(glass, 39, 20, 14, 12);
+      p(red, 37, 6, 18, 10); p(redSh, 50, 6, 5, 10);          // cúpula
+      p(0xffffff, 41, 22, 6, 4);                              // destello
+    });
+  },
+
+  // ---------- Barandal del malecón (balaustrada blanca, tileable) ----------
+  _railing(scene) {
+    Pixel.sprite(scene, 'railing', 64, 50, (p, ctx) => {
+      const wh = 0xf2ead6, sh = 0xcabd9c, base = 0xbfae86;
+      p(base, 0, 44, 64, 6);                          // zócalo corrido
+      p(wh, 0, 8, 64, 6); p(sh, 0, 14, 64, 2);        // pasamanos superior
+      for (let x = 3; x < 64; x += 12) { p(wh, x, 16, 6, 28); p(sh, x + 4, 16, 2, 28); }  // balaustres
+      p(wh, 0, 0, 64, 5); p(sh, 0, 5, 64, 1);         // remate
+    });
+  },
+
+  // ---------- Sombrilla de playa ----------
+  _umbrella(scene) {
+    Pixel.sprite(scene, 'umbrella', 76, 98, (p, ctx) => {
+      const pole = 0x8a6b45, poleHi = 0xab8a5c, red = 0xe23b3b, white = 0xf4f0e6;
+      const cx = 38, cy = 44, r = 34;
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = Pixel.col(i % 2 ? red : white);
+        ctx.beginPath(); ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, Math.PI + i * Math.PI / 6, Math.PI + (i + 1) * Math.PI / 6); ctx.fill();
+      }
+      p(0xb02a2a, 4, 42, 68, 4);                       // borde
+      p(pole, 36, 44, 4, 48); p(poleHi, 36, 44, 1, 48);
+      p(0xe4cd92, 26, 90, 24, 8);                       // montículo de arena
+    });
+  },
+
+  // ---------- Panga (lancha de pescador, flota en el mar) ----------
+  _panga(scene) {
+    Pixel.sprite(scene, 'panga', 88, 40, (p, ctx) => {
+      const hull = 0x2f6fa0, hullHi = 0x57a0c4, trim = 0xe8c038, mast = 0x8a5a2a, sail = 0xf4f0e6;
+      ctx.fillStyle = Pixel.col(hull);
+      ctx.beginPath(); ctx.moveTo(6, 14); ctx.lineTo(82, 14); ctx.lineTo(70, 34); ctx.lineTo(18, 34); ctx.fill();
+      p(trim, 6, 14, 76, 4); p(hullHi, 10, 30, 60, 3);
+      p(mast, 40, 0, 4, 14);                            // mástil
+      ctx.fillStyle = Pixel.col(sail);
+      ctx.beginPath(); ctx.moveTo(44, 1); ctx.lineTo(60, 13); ctx.lineTo(44, 13); ctx.fill();  // vela
+    });
+  },
+
   // -------------------------------------------------------
   //  Construir el fondo del nivel (capas parallax)
   // -------------------------------------------------------
   buildLevelBackground(scene, theme, W) {
     const gy = CONST.GROUND_Y;
+
+    // El malecón de Mazatlán tiene su propia composición (mar, islas, faro).
+    if (theme === 'malecon') { this._buildMalecon(scene, W, gy); return; }
 
     scene.add.image(0, 0, theme === 'jardin' ? 'sky_jardin' : 'sky_culiacan')
       .setOrigin(0, 0).setScrollFactor(0).setDepth(-30);
@@ -289,6 +394,62 @@ const SceneryArt = {
     }
 
     // viñeta atmosférica fija (encuadra y oscurece los bordes)
+    scene.add.image(0, 0, 'vignette').setOrigin(0, 0).setScrollFactor(0).setDepth(900);
+  },
+
+  // -------------------------------------------------------
+  //  Fondo del Malecón de Mazatlán (mar, islas, faro, barandal)
+  // -------------------------------------------------------
+  _buildMalecon(scene, W, gy) {
+    // cielo tropical
+    scene.add.image(0, 0, 'sky_malecon').setOrigin(0, 0).setScrollFactor(0).setDepth(-30);
+
+    // mar en el horizonte (debajo lo tapa el suelo del malecón)
+    scene.add.tileSprite(0, gy - 152, W, 190, 'sea').setOrigin(0, 0).setScrollFactor(0.25).setDepth(-26);
+    // las tres islas, en grupos dispersos sobre el horizonte
+    for (let x = 240; x < W; x += 1600) {
+      scene.add.image(x, gy - 98, 'islands').setOrigin(0.5, 1).setScrollFactor(0.32)
+        .setDepth(-25).setScale(0.8);
+    }
+
+    // pangas meciéndose en el mar
+    for (let x = 300, i = 0; x < W; x += 760, i++) {
+      const b = scene.add.image(x, gy - 92, 'panga').setOrigin(0.5, 1).setScrollFactor(0.4)
+        .setDepth(-24).setScale(0.9);
+      if (i % 2) b.setFlipX(true);
+      scene.tweens.add({ targets: b, y: b.y - 5, yoyo: true, repeat: -1, duration: 1400 + i * 130, ease: 'Sine.inOut' });
+    }
+
+    // faros como puntos de referencia
+    for (let x = 470, i = 0; x < W; x += 1550, i++) {
+      scene.add.image(x, gy + 10, 'faro').setOrigin(0.5, 1).setScrollFactor(0.55).setDepth(-20).setScale(0.95);
+    }
+
+    // palmeras lejanas (parallax medio)
+    for (let x = 220; x < W; x += 360) {
+      scene.add.image(x, gy + 8, 'palm').setOrigin(0.5, 1).setScrollFactor(0.8).setDepth(-12)
+        .setScale(0.95).setTint(0xdfeecb);
+    }
+
+    // barandal del malecón detrás de la acción
+    scene.add.tileSprite(0, gy - 38, W, 50, 'railing').setOrigin(0, 0).setScrollFactor(1).setDepth(1);
+
+    // palmeras y sombrillas en primer plano
+    for (let x = 360; x < W - 160; x += 520) {
+      scene.add.image(x, gy + 6, 'palm').setOrigin(0.5, 1).setScrollFactor(1).setDepth(2).setScale(1.1);
+    }
+    for (let x = 540, i = 0; x < W - 160; x += 470, i++) {
+      const u = scene.add.image(x, gy + 8, 'umbrella').setOrigin(0.5, 1).setScrollFactor(1).setDepth(3);
+      if (i % 2) u.setFlipX(true);
+    }
+
+    // unos tambos de cobertura (sin saturar la playa)
+    for (let x = 780, i = 0; x < W - 200; x += 900, i++) {
+      const img = scene.add.image(x, gy + 9, 'barrel').setOrigin(0.5, 1).setScrollFactor(1).setDepth(4);
+      if (i % 2) img.setFlipX(true);
+    }
+
+    // viñeta atmosférica
     scene.add.image(0, 0, 'vignette').setOrigin(0, 0).setScrollFactor(0).setDepth(900);
   },
 };

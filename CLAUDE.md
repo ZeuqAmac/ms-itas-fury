@@ -55,11 +55,15 @@ assets/                 Imágenes originales (Ita Ita.png, Lucky.png) + recortes
   nearest-neighbor (`pixelArt: true`). Cada personaje = varios frames →
   anims en `this.anims` (global). Outlines/sombras para look MS.
 - **Cuerpos de colisión** más chicos que el sprite, definidos en cada entidad.
-- **Niveles** en `LEVELS` (config.js); cada uno con `theme` ('culiacan'|'jardin'),
-  `enemies`, `pickups` (armas | 'vida' | 'lucky'), `width`.
+- **Niveles** en `LEVELS` (config.js); cada uno con `theme`
+  ('culiacan'|'jardin'|'malecon'), `enemies`, `pickups` (armas | 'vida' |
+  'lucky' | 'tanque'), `gaps`, `hazards`, `platforms`, `boss`, `width`.
 
 ## Controles
 Mover ← → / A D · Saltar ↑ / W / Espacio · Disparar J / Z · Granada K · Pausa P · Silencio M
+- **Cuchillazo:** mismo botón de tiro cuando el enemigo está pegado (auto).
+- **Móvil:** **joystick** analógico (abajo-izq.) para moverse + botones TIRO,
+  SALTO y 💣 a la derecha. En escritorio se fuerzan con `?touch=1` en la URL.
 
 ## Armas (config.js → WEAPONS)
 Escuadra (∞), Cuerno de Chivo, Escopeta Recortada, Bazuca (explosiva).
@@ -163,6 +167,20 @@ Al acabar munición vuelve a Escuadra.
 27. **Continuar donde moriste**: al morir con vidas restantes, revives en el
     último suelo firme SIN reiniciar el nivel (enemigos abatidos, armas y jefe
     conservan su estado). `GameScene.respawnPlayer` + seguimiento de `safeX/safeY`.
+
+## ✅ Hecho (sexta iteración 2026-06-02)
+28. **Cuchillazo más visible**: nueva textura `slash` (medialuna estilo MS) +
+    efecto `GameScene.meleeSlash` reescrito (medialuna opaca que barre, destello,
+    chispas y "¡SHK!"). Alcance subido (`meleeRange` 70).
+29. **Joystick táctil**: el movimiento en móvil ahora es un **stick analógico**
+    (abajo-izquierda) en vez de los botones ◀▶. `GameScene.buildTouchControls`
+    + `_moveJoy` (sigue el dedo, umbral a izq/der). Botones de acción a la derecha.
+30. **Nivel 2 rediseñado — Malecón de Mazatlán** (tema `malecon`, distinto del 1):
+    fondo nuevo de playa (mar con oleaje, las tres islas, **faro**, barandal del
+    malecón, palmeras, sombrillas, pangas) en `SceneryArt._buildMalecon` + sprites
+    nuevos. Suelo arenoso (`ground_malecon`). Layout con **muchas plataformas a
+    distintas alturas** (repisas bajas al ras del agua y miradores altos sobre el
+    faro) y más canales de mar para brincar.
 
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).

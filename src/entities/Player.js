@@ -31,7 +31,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.lastShot = 0;
     this.lastMelee = 0;          // cooldown del cuchillazo
     this.lastCannon = 0;         // cooldown del cañonazo del tanque
-    this.meleeRange = 58;        // distancia para apuñalar en vez de disparar
+    this.meleeRange = 70;        // distancia para apuñalar en vez de disparar
     this.invuln = false;
     this.wasOnGround = true;
     this.runDustAt = 0;
