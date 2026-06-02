@@ -107,21 +107,30 @@ class GameScene extends Phaser.Scene {
   }
 
   // ---------- Gamepad (GameSir X2 y mandos estándar) ----------
+  // Se lee por SONDEO cada frame (más confiable entre mandos que el evento
+  // 'down'): los botones discretos usan detección de flanco (`_padJust`).
   setupGamepad() {
     this.pad = null;
+    this._padPrev = {};
     const gp = this.input.gamepad;
     if (!gp) return;
-    // toma el primer mando ya conectado o el que se conecte
     if (gp.total && gp.getPad(0)) this.pad = gp.getPad(0);
     gp.on('connected', (pad) => { this.pad = pad; this.banner('🎮 ¡CONTROL LISTO!', '#9fe9ff'); });
-    // Botones discretos => reusan los flags de un solo disparo del táctil.
-    // Mapa estándar: 0=A 1=B 2=X 3=Y 4=LB 5=RB 8=Back 9=Start 12-15=Dpad.
-    gp.on('down', (pad, button, index) => {
-      if (index === 0) this.touch.jump = true;            // A = salto
-      else if (index === 3 || index === 4) this.touch.grenade = true;  // Y / LB = granada
-      else if (index === 9) this.togglePause();           // Start = pausa
-      else if (index === 8) this.toggleMute();            // Back = silencio
-    });
+  }
+
+  // ¿Está presionado el botón? key = getter de Phaser ('A','Y','L1'...) o índice.
+  _padDown(key) {
+    const p = this.pad;
+    if (!p) return false;
+    if (typeof key === 'number') { const b = p.buttons[key]; return !!(b && b.pressed); }
+    return !!p[key];
+  }
+  // Flanco de bajada (recién presionado) — llamar UNA vez por frame por key.
+  _padJust(key) {
+    const cur = this._padDown(key);
+    const prev = this._padPrev[key] || false;
+    this._padPrev[key] = cur;
+    return cur && !prev;
   }
 
   // ---------- Helpers de input (teclado + táctil + gamepad) ----------
@@ -143,12 +152,12 @@ class GameScene extends Phaser.Scene {
   aimUp() {
     const p = this.pad;
     return this.cursors.up.isDown || this.touch.up
-        || (p && (p.up || this._stickY(p) < -0.5));
+        || (p && (p.up || this._stickY(p) < -0.45));
   }
   aimDown() {
     const p = this.pad;
     return this.cursors.down.isDown || this.touch.down
-        || (p && (p.down || this._stickY(p) > 0.5));
+        || (p && (p.down || this._stickY(p) > 0.45));
   }
   btnShoot() {
     const p = this.pad;
@@ -157,12 +166,17 @@ class GameScene extends Phaser.Scene {
   }
   btnJumpJust() {
     if (this.touch.jump) { this.touch.jump = false; return true; }
-    return Phaser.Input.Keyboard.JustDown(this.wasd.W)
-        || Phaser.Input.Keyboard.JustDown(this.wasd.SPACE);
+    const kb = Phaser.Input.Keyboard.JustDown(this.wasd.W)
+            || Phaser.Input.Keyboard.JustDown(this.wasd.SPACE);
+    return kb || this._padJust('A');                       // A = salto
   }
   btnGrenadeJust() {
-    if (this.touch.grenade) { this.touch.grenade = false; return true; }
-    return Phaser.Input.Keyboard.JustDown(this.wasd.K);
+    const kb = this.touch.grenade
+            || Phaser.Input.Keyboard.JustDown(this.wasd.K);
+    if (this.touch.grenade) this.touch.grenade = false;
+    // Y / LB = granada (evaluar ambos para no romper la detección de flanco)
+    const y = this._padJust('Y'), lb = this._padJust('L1');
+    return kb || y || lb;
   }
 
   // Controles en pantalla (solo en táctil; ?touch en la URL los fuerza):
@@ -673,6 +687,7 @@ class GameScene extends Phaser.Scene {
     if (this.levelDone || this._respawning) return;
     this._respawning = true;
     this.player.setActive(false).setVisible(false);
+    if (this.player.aimMark) this.player.aimMark.setVisible(false);
     if (this.player.body) this.player.body.enable = false;
     this.boom(this.player.x, this.player.y, 1.4);
     GAME_STATE.lives -= 1;
@@ -842,6 +857,12 @@ class GameScene extends Phaser.Scene {
 
   // ---------- Loop ----------
   update(time) {
+    // gamepad: pausa (Start) y silencio (Back) por flanco
+    if (this.pad) {
+      if (this._padJust(9)) this.togglePause();
+      if (this._padJust(8)) this.toggleMute();
+    }
+
     if (this.player.active) {
       this.player.update(time);
       // Recuerda la última posición en suelo firme (no sobre pozos) para

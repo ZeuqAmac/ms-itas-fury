@@ -193,15 +193,16 @@ Al acabar munición vuelve a Escuadra.
 
 ## ✅ Hecho (séptima iteración 2026-06-02)
 31. **Soporte de gamepad** (GameSir X2 y mandos estándar): Phaser `input.gamepad`
-    habilitado en `main.js`. `GameScene.setupGamepad` lee stick/cruceta para
-    mover+apuntar y mapea A=salto, X/RB/RT/B=tiro, Y/LB=granada, Start=pausa,
-    Back=silencio (botones discretos reusan los flags one-shot del táctil).
-    Menús y selección de personaje también responden al control.
+    habilitado en `main.js`. Se lee por **SONDEO cada frame** (más confiable que
+    el evento `down` entre mandos): A=salto, X/RB/RT/B=tiro, Y/LB=granada,
+    Start=pausa, Back=silencio (botones discretos con flanco `_padJust`).
+    Menús y selección de personaje también sondean el control. Indicador 🎮 en
+    el HUD que brilla cuando el navegador detecta un mando.
 32. **Disparo direccional (8 vías)**: `Player.aimAngle()` calcula el ángulo de
     tiro según stick/cruceta (↑ dispara arriba; ↑+→ diagonal; abajo sólo en el
     aire). `tryShoot` usa el ángulo para balas, fogonazo y casquillos. El stick
-    táctil ahora también apunta (`touch.up/down` desde el joystick). El tanque
-    mantiene el cañón fijo (horizontal).
+    táctil ahora también apunta (`touch.up/down` desde el joystick). Una flecha
+    (`aim_arrow`) muestra hacia dónde apuntas. El tanque mantiene el cañón fijo.
 33. **Cajas de armas con diseño** (`src/art/PickupArt.js`): cada pickup es una
     caja de pertrechos de madera con marco metálico, franja de color por arma e
     **icono del arma/ítem** (AK, escopeta, RPG, botiquín+cruz, hueso de Lucky,

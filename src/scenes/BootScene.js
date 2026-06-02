@@ -14,6 +14,7 @@ class BootScene extends Phaser.Scene {
     this.genGroundMalecon();
     this.genGoal();
     this.genGrenade();
+    this.genAimArrow();
     this.genPlatform();
 
     // Sprites pixel-art + fondos + cajas de pertrechos
@@ -136,6 +137,15 @@ class BootScene extends Phaser.Scene {
     g.fillStyle(0xf0e0b4, 1);
     g.fillRect(8, 50, 2, 2); g.fillRect(38, 28, 2, 2); g.fillRect(56, 64, 2, 2);
     g.generateTexture('ground_malecon', w, h);
+    g.destroy();
+  }
+
+  // --- Flecha indicadora de puntería ---
+  genAimArrow() {
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0xffe066, 1).fillTriangle(1, 1, 1, 15, 15, 8);
+    g.lineStyle(2, 0x6e3a00, 1).strokeTriangle(1, 1, 1, 15, 15, 8);
+    g.generateTexture('aim_arrow', 16, 16);
     g.destroy();
   }
 

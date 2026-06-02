@@ -80,15 +80,26 @@ class MenuScene extends Phaser.Scene {
     this.input.once('pointerdown', go);
 
     // Aviso de control detectado (Gamepad API): confirma que el navegador lo ve.
-    const padTxt = this.add.text(W / 2, H - 62, '', {
+    this._padTxt = this.add.text(W / 2, H - 62, '', {
       fontFamily: 'Trebuchet MS', fontStyle: 'bold', fontSize: '15px', color: '#9fe9ff',
       stroke: '#000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(40);
-    const showPad = () => padTxt.setText('🎮 ¡Control detectado! Presiona un botón para empezar');
-    if (this.input.gamepad) {
-      if (this.input.gamepad.total > 0) showPad();
-      this.input.gamepad.once('connected', showPad);
-      this.input.gamepad.once('down', go);   // cualquier botón del control
+    this._go = go;
+    // pequeña espera para no "heredar" un botón sostenido de la escena anterior
+    this._padReady = false;
+    this.time.delayedCall(350, () => { this._padReady = true; });
+  }
+
+  // Sondeo del gamepad (más confiable que el evento 'down' entre mandos)
+  update() {
+    const gp = this.input.gamepad;
+    const p = (gp && gp.total) ? gp.getPad(0) : null;
+    if (!p) return;
+    if (this._padTxt && !this._padTxt.text) {
+      this._padTxt.setText('🎮 ¡Control detectado! Presiona un botón para empezar');
+    }
+    if (this._padReady && !this._started && p.buttons.some(b => b && b.pressed)) {
+      this._started = true; this._go();
     }
   }
 }
