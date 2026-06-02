@@ -120,12 +120,44 @@ class GameScene extends Phaser.Scene {
     return Phaser.Input.Keyboard.JustDown(this.wasd.K);
   }
 
-  // Botones en pantalla (solo en dispositivos táctiles; ?touch en la URL los fuerza)
+  // Controles en pantalla (solo en táctil; ?touch en la URL los fuerza):
+  // joystick analógico para moverse + botones de acción a la derecha.
   buildTouchControls() {
     const force = (window.location.search || '').indexOf('touch') >= 0;
     if (!this.sys.game.device.input.touch && !force) return;
 
     const D = 3000, W = CONST.WIDTH, H = CONST.HEIGHT, yb = H - 72;
+
+    // --- Joystick de movimiento (abajo-izquierda) ---
+    const bx = 104, by = H - 86, R = 56;
+    this.add.circle(bx, by, R, 0x000000, 0.28).setScrollFactor(0).setDepth(D)
+      .setStrokeStyle(3, 0xffd24a, 0.55);
+    this.add.circle(bx, by, R * 0.42, 0xffffff, 0.06).setScrollFactor(0).setDepth(D);
+    const knob = this.add.circle(bx, by, 28, 0xffd24a, 0.6).setScrollFactor(0).setDepth(D + 1)
+      .setStrokeStyle(3, 0x6e1423, 0.9);
+    this.joy = { active: false, pointer: null, bx, by, R, knob };
+
+    // zona amplia (mitad inferior izquierda) para agarrar el stick donde toques
+    const jzone = this.add.zone(0, H - 230, W * 0.5, 230).setOrigin(0, 0)
+      .setScrollFactor(0).setDepth(D - 1).setInteractive();
+    jzone.on('pointerdown', (pointer) => {
+      this.joy.active = true; this.joy.pointer = pointer;
+      this._moveJoy(pointer);
+    });
+    this.input.on('pointermove', (pointer) => {
+      if (this.joy.active && pointer === this.joy.pointer) this._moveJoy(pointer);
+    });
+    const releaseJoy = (pointer) => {
+      if (this.joy.active && pointer === this.joy.pointer) {
+        this.joy.active = false; this.joy.pointer = null;
+        this.joy.knob.setPosition(bx, by);
+        this.touch.left = false; this.touch.right = false;
+      }
+    };
+    this.input.on('pointerup', releaseJoy);
+    this.input.on('pointerupoutside', releaseJoy);
+
+    // --- Botones de acción (derecha) ---
     const mk = (x, y, r, label, fs) => {
       this.add.circle(x, y, r, 0x000000, 0.3).setScrollFactor(0).setDepth(D)
         .setStrokeStyle(3, 0xffd24a, 0.7);
@@ -141,11 +173,21 @@ class GameScene extends Phaser.Scene {
       z.on('pointerupoutside', () => set(false));
     };
 
-    hold(mk(72, yb, 42, '◀', 22), v => this.touch.left = v);
-    hold(mk(176, yb, 42, '▶', 22), v => this.touch.right = v);
     hold(mk(W - 182, yb + 4, 52, 'TIRO', 16), v => this.touch.shoot = v);
     mk(W - 70, yb, 46, 'SALTO', 13).on('pointerdown', () => { this.touch.jump = true; });
     mk(W - 150, yb - 96, 34, '💣', 22).on('pointerdown', () => { this.touch.grenade = true; });
+  }
+
+  // Mueve el knob del joystick y traduce a izquierda/derecha.
+  _moveJoy(pointer) {
+    const j = this.joy;
+    const dx = pointer.x - j.bx, dy = pointer.y - j.by;
+    const dist = Math.hypot(dx, dy) || 1;
+    const cl = Math.min(dist, j.R);
+    j.knob.setPosition(j.bx + (dx / dist) * cl, j.by + (dy / dist) * cl);
+    const th = j.R * 0.32;
+    this.touch.left = dx < -th;
+    this.touch.right = dx > th;
   }
 
   // ---------- Spawns ----------
@@ -158,7 +200,9 @@ class GameScene extends Phaser.Scene {
   // Suelo en segmentos, dejando huecos (pozos) donde haya gaps.
   buildGround(W, gaps) {
     const gy = CONST.GROUND_Y;
-    const tint = this.level.theme === 'jardin' ? 0xc7b27e : 0xffffff;
+    const theme = this.level.theme;
+    const groundTex = theme === 'malecon' ? 'ground_malecon' : 'ground';
+    const tint = theme === 'jardin' ? 0xc7b27e : 0xffffff;
     const sorted = gaps.slice().sort((a, b) => a.x - b.x);
     let cursor = 0;
     const pieces = [];
@@ -169,7 +213,7 @@ class GameScene extends Phaser.Scene {
     if (cursor < W) pieces.push([cursor, W]);
     pieces.forEach(([x1, x2]) => {
       const w = x2 - x1;
-      const ts = this.add.tileSprite(x1, gy, w, 80, 'ground').setOrigin(0, 0).setDepth(0);
+      const ts = this.add.tileSprite(x1, gy, w, 80, groundTex).setOrigin(0, 0).setDepth(0);
       if (tint !== 0xffffff) ts.setTint(tint);
       const body = this.add.rectangle(x1 + w / 2, gy + 40, w, 80);
       this.physics.add.existing(body, true);
@@ -311,24 +355,30 @@ class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: sm, scale: 1, alpha: 0, y: y - 12, duration: 320, onComplete: () => sm.destroy() });
   }
 
-  // Tajo de cuchillo: medialuna blanca rápida frente al jugador.
+  // Tajo de cuchillo: medialuna blanca grande que barre frente al jugador.
   meleeSlash(x, y, dir) {
     const ADD = Phaser.BlendModes.ADD;
-    const arc = this.add.image(x, y, 'spark').setTint(0xffffff)
-      .setScale(0.5, 1.7).setRotation(dir > 0 ? -0.5 : 0.5)
-      .setDepth(12).setBlendMode(ADD);
+    // medialuna (textura 'slash', opaca => visible sobre cualquier fondo)
+    const arc = this.add.image(x, y, 'slash').setDepth(14).setFlipX(dir < 0)
+      .setScale(0.65).setAngle(-38 * dir).setOrigin(0.5);
     this.tweens.add({
-      targets: arc, scaleX: 2.2, scaleY: 0.4, alpha: 0,
-      rotation: arc.rotation + dir * 1.1, duration: 150,
-      onComplete: () => arc.destroy(),
+      targets: arc, scale: 1.7, angle: 36 * dir, alpha: 0,
+      duration: 230, ease: 'Cubic.out', onComplete: () => arc.destroy(),
     });
-    for (let i = 0; i < 4; i++) {
-      const s = this.add.image(x, y, 'spark').setTint(0xbfeaff).setScale(0.3).setDepth(12).setBlendMode(ADD);
+    // destello aditivo en el punto de impacto
+    const flash = this.add.image(x + dir * 6, y, 'spark').setTint(0xffffff)
+      .setScale(1.6, 1.1).setBlendMode(ADD).setDepth(14);
+    this.tweens.add({ targets: flash, scaleX: 0, alpha: 0, duration: 150, onComplete: () => flash.destroy() });
+    // chispas hacia adelante
+    for (let i = 0; i < 5; i++) {
+      const s = this.add.image(x, y, 'spark').setTint(0xcfefff).setScale(0.4).setDepth(14).setBlendMode(ADD);
       this.tweens.add({
-        targets: s, x: x + dir * Phaser.Math.Between(10, 36), y: y + Phaser.Math.Between(-16, 16),
-        scale: 0, alpha: 0, duration: 170, onComplete: () => s.destroy(),
+        targets: s, x: x + dir * Phaser.Math.Between(18, 50), y: y + Phaser.Math.Between(-22, 22),
+        scale: 0, alpha: 0, duration: 200, onComplete: () => s.destroy(),
       });
     }
+    // pequeño "¡SHK!" para que se note el cuchillazo
+    this.floatText(x + dir * 12, y - 14, '¡SHK!', '#ffffff');
   }
 
   boom(x, y, scale = 1) {

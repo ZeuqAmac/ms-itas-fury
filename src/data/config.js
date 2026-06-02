@@ -127,45 +127,68 @@ const LEVELS = [
   },
   {
     name: 'El Malecón de Mazatlán',
-    theme: 'jardin',
-    width: 7000,
-    boss: { type: 'general', name: 'EL GENERAL', hp: 2600, triggerX: 6050 },
-    gaps: [{ x: 2150, w: 150 }, { x: 5050, w: 150 }],
-    hazards: [
-      { x: 1300, w: 120, type: 'water' },
-      { x: 3900, w: 130, type: 'water' },
-      { x: 5950, w: 110, type: 'water' },
+    theme: 'malecon',
+    width: 7200,
+    boss: { type: 'general', name: 'EL GENERAL', hp: 2600, triggerX: 6250 },
+    // canales de mar: hay que brincarlos (caer = pierdes vida)
+    gaps: [
+      { x: 1500, w: 150 }, { x: 2750, w: 170 }, { x: 3850, w: 150 }, { x: 5050, w: 190 },
     ],
+    // charcos de marea / agua que daña al tocarla
+    hazards: [
+      { x: 900, w: 120, type: 'water' },
+      { x: 4400, w: 130, type: 'water' },
+      { x: 5750, w: 120, type: 'water' },
+    ],
+    // Plataformas a MUCHAS alturas: escaleras que suben y bajan, repisas
+    // bajas pegadas al agua y miradores altos sobre el faro.
     platforms: [
-      { x: 1200, y: 380, w: 160 },
-      { x: 1460, y: 320, w: 160 },
-      { x: 1720, y: 260, w: 180 },
-      { x: 2800, y: 350, w: 150 },
-      { x: 3060, y: 300, w: 150 },
-      { x: 3320, y: 350, w: 150 },
-      { x: 4400, y: 360, w: 200 },
-      { x: 4720, y: 300, w: 170 },
-      { x: 5900, y: 370, w: 220 },
-      { x: 6200, y: 310, w: 180 },
+      // primera subida escalonada hasta un mirador
+      { x: 700, y: 430, w: 150 },
+      { x: 950, y: 372, w: 150 },
+      { x: 1200, y: 312, w: 160 },     // mirador con recompensa
+      { x: 1430, y: 392, w: 120 },     // bajada hacia el canal
+      { x: 1640, y: 424, w: 130 },     // repisa baja (al ras del mar)
+      // tramo medio: techos de palapas a distinta altura
+      { x: 2050, y: 360, w: 160 },
+      { x: 2300, y: 300, w: 150 },
+      { x: 2560, y: 360, w: 150 },
+      { x: 2730, y: 414, w: 130 },     // brinco bajo sobre el 2º canal
+      // gran escalera hacia el mirador del faro
+      { x: 3150, y: 410, w: 140 },
+      { x: 3380, y: 348, w: 140 },
+      { x: 3610, y: 286, w: 150 },
+      { x: 3840, y: 224, w: 160 },     // mirador ALTO (bazuca)
+      // descenso tras el 3er canal
+      { x: 4080, y: 300, w: 140 },
+      { x: 4320, y: 380, w: 150 },
+      // tramo bajo cerca del agua
+      { x: 4650, y: 432, w: 150 },
+      { x: 5020, y: 412, w: 150 },     // brinco sobre el canal grande
+      // último ascenso a la pelea
+      { x: 5350, y: 358, w: 150 },
+      { x: 5600, y: 298, w: 160 },
+      { x: 5880, y: 360, w: 150 },
+      { x: 6300, y: 372, w: 240 },     // explanada del jefe
     ],
     enemies: [
-      { x: 650 }, { x: 1000 }, { x: 1050 }, { x: 1500 }, { x: 1900 }, { x: 2050 },
-      { x: 2450 }, { x: 2500 }, { x: 2950 }, { x: 3300 }, { x: 3700 }, { x: 3750 },
-      { x: 4150 }, { x: 4500 }, { x: 4900 }, { x: 4950 }, { x: 5400 }, { x: 5800 },
-      { x: 6100 }, { x: 6150 }, { x: 6500 }, { x: 6700 },
+      { x: 620 }, { x: 1080 }, { x: 1320 }, { x: 1750 }, { x: 1950 },
+      { x: 2250 }, { x: 2480 }, { x: 2980 }, { x: 3300 }, { x: 3550 },
+      { x: 4060 }, { x: 4250 }, { x: 4600 }, { x: 4900 }, { x: 5300 },
+      { x: 5550 }, { x: 5950 }, { x: 6100 }, { x: 6450 }, { x: 6650 },
     ],
     pickups: [
-      { x: 900, type: 'escopeta' },
-      { x: 1500, type: 'vida' },
-      { x: 1780, y: 234, type: 'bazuca' },
-      { x: 2300, type: 'cuerno' },
-      { x: 2700, type: 'lucky' },
-      { x: 3120, y: 274, type: 'vida' },
-      { x: 4000, type: 'escopeta' },
-      { x: 4780, y: 274, type: 'cuerno' },
-      { x: 5500, type: 'vida' },
-      { x: 4250, type: 'tanque' },            // ¡sube al tanque!
-      { x: 6250, y: 284, type: 'bazuca' },
+      { x: 760, type: 'escopeta' },
+      { x: 1200, y: 286, type: 'vida' },     // mirador
+      { x: 1900, type: 'cuerno' },
+      { x: 2300, y: 274, type: 'lucky' },    // sobre palapa
+      { x: 2980, type: 'vida' },
+      { x: 3840, y: 198, type: 'bazuca' },   // mirador alto del faro
+      { x: 4250, y: 354, type: 'escopeta' },
+      { x: 4700, type: 'tanque' },           // ¡sube al tanque!
+      { x: 5600, y: 272, type: 'cuerno' },
+      { x: 5950, type: 'vida' },
+      { x: 6500, type: 'bazuca' },
     ],
   },
 ];
