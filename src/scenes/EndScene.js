@@ -40,7 +40,17 @@ class EndScene extends Phaser.Scene {
     this.input.keyboard.once('keydown-ENTER', go);
     this.input.keyboard.once('keydown-SPACE', go);
     this.input.once('pointerdown', go);
-    if (this.input.gamepad) this.input.gamepad.once('down', go);
+    this._go = go;
+    this._padReady = false;
+    this.time.delayedCall(350, () => { this._padReady = true; });
+  }
+
+  // Sondeo del gamepad: cualquier botón vuelve al menú
+  update() {
+    const gp = this.input.gamepad;
+    const p = (gp && gp.total) ? gp.getPad(0) : null;
+    if (!p || !this._padReady || this._done) return;
+    if (p.buttons.some(b => b && b.pressed)) { this._done = true; this._go(); }
   }
 }
 

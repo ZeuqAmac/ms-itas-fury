@@ -111,16 +111,25 @@ class CharacterSelectScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-ENTER', () => this.startGame());
     this.input.keyboard.on('keydown-SPACE', () => this.startGame());
 
-    // --- Gamepad: cruceta para elegir, A/Start para jugar ---
-    if (this.input.gamepad) {
-      this.input.gamepad.on('down', (pad, button, index) => {
-        if (index === 14) this.move(-1);             // dpad izquierda
-        else if (index === 15) this.move(1);         // dpad derecha
-        else if (index === 0 || index === 9) this.startGame();  // A / Start
-      });
-    }
+    // --- Gamepad: sondeo por frame (cruceta/stick elige, A/Start juega) ---
+    this._padReady = false;
+    this.time.delayedCall(350, () => { this._padReady = true; });
 
     this.select(this.selIndex);
+  }
+
+  // Sondeo del gamepad con detección de flanco
+  update() {
+    const gp = this.input.gamepad;
+    const p = (gp && gp.total) ? gp.getPad(0) : null;
+    if (!p) return;
+    const left = !!p.left || (p.leftStick && p.leftStick.x < -0.5);
+    const right = !!p.right || (p.leftStick && p.leftStick.x > 0.5);
+    const confirm = !!p.A || !!(p.buttons[9] && p.buttons[9].pressed);
+    if (left && !this._pl) this.move(-1);
+    if (right && !this._pr) this.move(1);
+    if (this._padReady && confirm && !this._pc) this.startGame();
+    this._pl = left; this._pr = right; this._pc = confirm;
   }
 
   move(d) {

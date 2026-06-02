@@ -49,6 +49,9 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.play(this.skin + '-idle');
 
+    // Flecha que muestra hacia dónde apuntas (aparece al apuntar arriba/diagonal)
+    this.aimMark = scene.add.image(x, y, 'aim_arrow').setDepth(11).setVisible(false);
+
     // Arranque montado en el tanque si así se eligió en la selección
     if (GAME_STATE.character === 'tanque') this.enterTank(true);
   }
@@ -102,6 +105,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
   update(time) {
     if (!this.active) return;
+    if (this.aimMark) this.aimMark.setVisible(false);   // oculto por defecto
     if (this.mode === 'tank') return this.updateTank(time);
     if (this.dodging) return this.updateDodge(time);
     const scene = this.scene;
@@ -146,12 +150,29 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       return this.startDodge(time);
     }
 
+    // Indicador de puntería (muestra la dirección al apuntar arriba/diagonal/abajo)
+    this.updateAimMark();
+
     // Botón de tiro: si hay un enemigo a quemarropa, da un cuchillazo
     // (estilo Metal Slug); si no, dispara el arma equipada.
     if (scene.btnShoot()) {
       if (!this.tryMelee(time)) this.tryShoot(time);
     }
     if (scene.btnGrenadeJust()) this.throwGrenade();
+  }
+
+  // Muestra la flecha de puntería cuando apuntas en vertical/diagonal.
+  updateAimMark() {
+    if (!this.aimMark) return;
+    const sc = this.scene;
+    const up = sc.aimUp(), down = sc.aimDown();
+    const showVert = up || (down && !this.onGround);   // arriba siempre; abajo sólo en el aire
+    if (!showVert) { this.aimMark.setVisible(false); return; }
+    const ang = this.aimAngle();
+    const r = 44;
+    this.aimMark.setVisible(true)
+      .setPosition(this.x + Math.cos(ang) * r, (this.y - 6) + Math.sin(ang) * r)
+      .setRotation(ang);
   }
 
   // Inicia la rodada de esquive (i-frames + impulso horizontal + giro).
