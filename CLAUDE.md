@@ -34,9 +34,13 @@ src/entities/Player.js  Ita: movimiento, salto, disparo, armas, polvo, casquillo
 src/entities/Chairo.js  Enemigo: IA (camina/dispara), animación de muerte
 src/entities/Lucky.js   Compañero: flota, auto-dispara al enemigo más cercano
 src/scenes/BootScene.js Genera texturas/arte y arranca
-src/scenes/MenuScene.js Título (usa ita_poster)
+src/scenes/MenuScene.js Título (usa ita_poster) → Selección de personaje
+src/scenes/CharacterSelectScene.js  Tarjetas de personaje (CHARACTERS) — extensible
 src/scenes/GameScene.js Gameplay: mundo, colisiones, HUD, progresión, efectos
 src/scenes/EndScene.js  Victoria / game over
+manifest.webmanifest    PWA: nombre, iconos, display standalone, landscape
+sw.js                   Service worker (instalable + offline)
+icon-*.png              Iconos PWA (generados por tools/make_icons.py)
 tools/crop.ps1          Recorta sprites de imágenes fuente (.NET System.Drawing)
 tools/cutout.ps1        (Obsoleto) intento de quitar fondo por flood-fill
 assets/                 Imágenes originales (Ita Ita.png, Lucky.png) + recortes
@@ -113,6 +117,35 @@ Al acabar munición vuelve a Escuadra.
     **modo furia** bajo 50% HP (más rápido/más balas) y refuerzos (chairos).
     Barra de vida en HUD. Derrotarlo = completa el nivel (ya no hay bandera de meta
     en niveles con jefe). N1: **EL PATRÓN** (1200 HP) · N2: **EL GENERAL** (1600 HP).
+
+## ✅ Hecho (cuarta iteración 2026-06-02)
+17. **PWA instalable**: `manifest.webmanifest` + `sw.js` (service worker:
+    navegación network-first, CDN cache-first, resto stale-while-revalidate) +
+    iconos generados por código (`tools/make_icons.py`, PNG en Python puro:
+    `icon-192/512.png`, `apple-touch-icon.png`). Botón "Instalar app" en
+    `index.html` (usa `beforeinstallprompt`). `serve.ps1`/`serve-lan.ps1` ahora
+    sirven `.webmanifest`. Objetivo: instalar como app y quitar la barra del
+    navegador (que tapaba los controles).
+18. **Fix móvil (¡clave!)**: el lienzo ya NO se corta tras la barra de
+    direcciones. `index.html` mide el alto VISIBLE real (`visualViewport`/
+    `innerHeight` → variable `--app-height`, con `100dvh` de respaldo) y reajusta
+    Phaser (`scale.refresh`) al rotar o mostrar/ocultar la barra.
+19. **Selección de personaje** (`src/scenes/CharacterSelectScene.js`,
+    `CHARACTERS` en config.js): tarjetas extensibles (toca para elegir, doble
+    toque/Enter para jugar). Incluye Ita y el Tanque; Lucky y "¿?" bloqueados
+    (placeholders para futuros personajes). Menú → Selección → Juego.
+20. **Tanque jugable "El Slug"** (`CharacterArt._buildTank`, modo en `Player`):
+    `enterTank/exitTank`, blindaje propio (barra en HUD), cañón explosivo
+    (`WEAPONS.canon`), orugas animadas, salto corto. Se obtiene como pickup
+    `tanque` en los niveles o eligiéndolo en la selección. Al agotarse el
+    blindaje, Ita sale a pie.
+21. **Ita más fiel a la referencia**: melena castaña más voluminosa/ondulada,
+    ombligo a la vista (chaleco abierto), mejor sombreado.
+22. **Escenario más Metal Slug**: props de guerra (sacos terreros, tambos con
+    franja de peligro, escombros) + **viñeta atmosférica** cinemática, cuidando
+    la identidad sinaloense.
+23. **Herramienta de dev** `tools/render.js`: previsualiza el arte por código en
+    PNG (mock de canvas en Node). Salida en `tools/preview/` (ignorada por git).
 
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).

@@ -11,6 +11,7 @@ const CharacterArt = {
     this._buildLucky(scene);
     this._buildChairo(scene);
     this._buildBoss(scene);
+    this._buildTank(scene);
     this._anims(scene);
   },
 
@@ -30,7 +31,7 @@ const CharacterArt = {
 
   _drawIta(p, fr) {
     const skin = 0xe8b184, skinHi = 0xf4c79a, skinSh = 0xc28a5c;
-    const hair = 0x3a2412, hairMid = 0x5a3a1d, hairHi = 0x8a5a2c;
+    const hair = 0x4d2e15, hairMid = 0x774925, hairHi = 0xa3692f;
     const vest = 0x1e1e1e, vestMid = 0x343434, vestHi = 0x4c4c4c;
     const top = 0x2f8f8f, topHi = 0x57bcbc;
     const camo = 0x6e7a44, camoD = 0x49532c, camoL = 0x93a05f, blot = 0x383f1e;
@@ -55,11 +56,13 @@ const CharacterArt = {
       p(boot, x, y + 14, 7, 4); p(bootHi, x, y + 14, 7, 1);
     };
 
-    // --- cabello trasero (melena larga y ondulada) ---
-    p(hair, 3, 4 + oy, 9, 24);
-    p(hair, 2, 11 + oy, 3, 12);                     // onda externa
-    p(hair, 4, 26 + oy, 7, 12);                     // largo
-    p(hairMid, 4, 6 + oy, 3, 18); p(hairHi, 5, 9 + oy, 2, 12);
+    // --- cabello trasero (melena larga, voluminosa y ondulada) ---
+    p(hair, 2, 3 + oy, 11, 26);                     // mata principal
+    p(hair, 0, 9 + oy, 3, 14);                      // onda externa (volumen)
+    p(hair, 1, 22 + oy, 4, 9);                      // rizo bajo
+    p(hair, 4, 27 + oy, 8, 13);                     // largo que cae
+    p(hairMid, 3, 6 + oy, 4, 20); p(hairHi, 4, 9 + oy, 2, 14);
+    p(hairHi, 2, 16 + oy, 1, 8);                    // brillo de la onda
 
     // --- brazo trasero ---
     p(skinSh, 7, 17 + oy, 4, 9);
@@ -70,8 +73,10 @@ const CharacterArt = {
 
     // --- torso: chaleco negro abierto + top teal ---
     p(vest, 9, 15 + oy, 15, 16); p(vestMid, 9, 15 + oy, 15, 2); p(vestHi, 9, 15 + oy, 2, 16);
-    p(top, 14, 16 + oy, 6, 8); p(topHi, 14, 16 + oy, 2, 8);
+    p(top, 14, 16 + oy, 6, 6); p(topHi, 14, 16 + oy, 2, 6);
     p(skin, 16, 16 + oy, 2, 3);                     // escote
+    p(skin, 14, 22 + oy, 6, 7);                     // ombligo a la vista (chaleco abierto)
+    p(skinSh, 14, 22 + oy, 1, 7); p(skinSh, 16, 25 + oy, 1, 1);
     p(ink, 13, 16 + oy, 1, 14); p(ink, 20, 16 + oy, 1, 14);   // cierres
     p(0x121212, 10, 23 + oy, 3, 4); p(0x121212, 20, 23 + oy, 3, 4); // bolsas
     p(0x2a1d12, 9, 29 + oy, 15, 3); p(buckle, 15, 29 + oy, 4, 3);   // cinturón
@@ -257,6 +262,60 @@ const CharacterArt = {
   },
 
   // -------------------------------------------------------
+  //  TANQUE "El Slug" (74 x 48) — Ita asomada, cañón y orugas
+  // -------------------------------------------------------
+  _buildTank(scene) {
+    const W = 74, H = 48;
+    ['0', '1'].forEach(fr => {
+      Pixel.sprite(scene, 'tank_body' + fr, W, H, (p, ctx) => this._drawTank(p, ctx, fr));
+    });
+  },
+
+  _drawTank(p, ctx, fr) {
+    const hull = 0x5d6b39, hullHi = 0x83924f, hullSh = 0x3d4824;
+    const tread = 0x1f2124, treadHi = 0x3a3d40, wheel = 0x4a4d50, hub = 0x80868c;
+    const barrel = 0x2f3236, barrelHi = 0x5a5f64, muzzle = 0x111316;
+    const glass = 0x8fe0e0, glassHi = 0xc9f6f6, frame = 0x2e3622, gold = 0xe9c45a;
+    const skin = 0xe8b184, hair = 0x4a2e16, hairHi = 0x7a4a22, ink = 0x0a0a0a;
+
+    // --- Orugas (banda + ruedas + cleats que avanzan) ---
+    p(tread, 2, 32, 70, 14);
+    p(treadHi, 2, 32, 70, 2);
+    p(0x101214, 2, 44, 70, 2);
+    const arc = (x, y, r, c) => { ctx.fillStyle = Pixel.col(c); ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
+    [10, 22, 34, 46, 58, 68].forEach(wx => { arc(wx, 38, 5, wheel); arc(wx, 38, 2, hub); });
+    const off = fr === '1' ? 4 : 0;
+    for (let x = 4; x < 72; x += 8) { p(treadHi, ((x + off) % 70) + 2, 32, 3, 2); p(0x101214, ((x + off + 4) % 70) + 2, 43, 3, 1); }
+
+    // --- Casco / hull (con bisel frontal) ---
+    p(hullSh, 6, 28, 60, 6);
+    p(hull, 8, 16, 56, 16); p(hullHi, 8, 16, 56, 3); p(hullSh, 8, 29, 56, 3);
+    ctx.fillStyle = Pixel.col(hull); ctx.beginPath();
+    ctx.moveTo(60, 16); ctx.lineTo(70, 24); ctx.lineTo(60, 32); ctx.fill();   // morro inclinado
+    ctx.fillStyle = Pixel.col(hullSh); ctx.beginPath();
+    ctx.moveTo(64, 26); ctx.lineTo(70, 24); ctx.lineTo(64, 32); ctx.fill();
+    // estrella dorada en el costado
+    p(gold, 16, 22, 4, 2); p(gold, 17, 20, 2, 6); p(gold, 14, 23, 8, 2);
+
+    // --- Cabina / domo donde Ita se asoma ---
+    p(frame, 22, 4, 22, 13); p(frame, 22, 4, 22, 2);
+    p(glass, 24, 7, 18, 9); p(glassHi, 24, 7, 6, 2);
+    // Ita asomada
+    p(hair, 28, 1, 12, 7); p(hairHi, 29, 2, 3, 3);
+    p(skin, 30, 4, 8, 6);
+    p(ink, 31, 6, 2, 2); p(ink, 35, 6, 2, 2);   // ojos
+    p(0xbe5566, 32, 9, 4, 1);                     // sonrisa
+
+    // --- Cañón (apunta a la derecha) ---
+    p(barrel, 40, 19, 30, 7); p(barrelHi, 40, 19, 30, 2);
+    p(barrel, 38, 17, 8, 11);                      // base del cañón
+    p(muzzle, 68, 18, 5, 9); p(barrelHi, 68, 18, 5, 1);  // boca
+
+    // --- Sombra de contacto inferior ---
+    p(0x101214, 6, 45, 62, 1);
+  },
+
+  // -------------------------------------------------------
   //  Animaciones
   // -------------------------------------------------------
   _anims(scene) {
@@ -270,6 +329,7 @@ const CharacterArt = {
     mk('lucky-idle', ['lucky_idle0', 'lucky_idle1'], 4, -1);
     mk('lucky-walk', ['lucky_walk0', 'lucky_walk1'], 9, -1);
     mk('chairo-walk', ['chairo_walk0', 'chairo_walk1', 'chairo_walk2', 'chairo_walk3'], 8, -1);
+    mk('tank-roll', ['tank_body0', 'tank_body1'], 8, -1);
   },
 };
 

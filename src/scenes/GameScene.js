@@ -223,6 +223,7 @@ class GameScene extends Phaser.Scene {
       bazuca:   { tint: 0xdddddd, letra: 'RPG', col: '#222' },
       vida:     { tint: 0x4be36a, letra: '+', col: '#063b12' },
       lucky:    { tint: 0xffc24a, letra: 'LUCKY', col: '#3a2600' },
+      tanque:   { tint: 0x9fb45a, letra: 'TANQUE', col: '#1d2608' },
     };
     const st = styles[type] || { tint: 0xffffff, letra: '?', col: '#000' };
     c.setTint(st.tint);
@@ -425,6 +426,10 @@ class GameScene extends Phaser.Scene {
       player.heal(40);
       this.floatText(crate.x, crate.y, '+40 VIDA', '#4be36a');
       SFX.play('heal');
+    } else if (type === 'tanque') {
+      player.enterTank(false);
+      this.floatText(crate.x, crate.y, '¡TANQUE LISTO!', '#c7e36a');
+      SFX.play('powerup');
     } else if (type === 'lucky') {
       this.giveLucky();
       this.floatText(crate.x, crate.y, '¡LUCKY AL ATAQUE!', '#ffd24a');
@@ -606,9 +611,20 @@ class GameScene extends Phaser.Scene {
       g.fillStyle(0xff4d6d, 1).fillCircle(x + w + 22 + i * 22, y + 8, 7);
     }
 
+    // barra de blindaje del tanque (debajo de la vida)
+    if (this.player.mode === 'tank' && this.player.maxShield > 0) {
+      const sy = y + h + 6;
+      g.fillStyle(0x000000, 0.55).fillRoundedRect(x - 3, sy - 3, w + 6, 14, 4);
+      g.fillStyle(0x16240a, 1).fillRoundedRect(x, sy, w, 8, 3);
+      const sf = Phaser.Math.Clamp(this.player.shield / this.player.maxShield, 0, 1);
+      g.fillStyle(0xc7e36a, 1).fillRoundedRect(x, sy, Math.max(2, w * sf), 8, 3);
+    }
+
     const wpn = WEAPONS[this.player.weapon];
-    const ammo = this.player.weapon === 'escuadra' ? '∞' : (this.player.ammo[this.player.weapon] || 0);
-    this.hudWeapon.setText('🔫 ' + wpn.name + '  [' + ammo + ']   💣 x' + this.player.grenades);
+    const ammoVal = this.player.ammo[this.player.weapon];
+    const ammo = wpn.ammo === Infinity ? '∞' : (ammoVal || 0);
+    const icon = this.player.mode === 'tank' ? '🛡️' : '🔫';
+    this.hudWeapon.setText(icon + ' ' + wpn.name + '  [' + ammo + ']   💣 x' + this.player.grenades);
     this.hudScore.setText('PUNTOS: ' + GAME_STATE.score);
     this.hudLevel.setText('Nivel ' + (this.levelIndex + 1) + ': ' + this.level.name);
     if (this.lucky && this.lucky.active) {

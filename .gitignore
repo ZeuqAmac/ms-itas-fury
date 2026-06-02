@@ -6,6 +6,9 @@
 /escenario.png
 /assets/
 
+# Previsualizaciones de arte generadas por tools/render.js (solo dev)
+/tools/preview/
+
 # Basura del sistema / temporales
 .DS_Store
 Thumbs.db
