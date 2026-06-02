@@ -34,9 +34,13 @@ src/entities/Player.js  Ita: movimiento, salto, disparo, armas, polvo, casquillo
 src/entities/Chairo.js  Enemigo: IA (camina/dispara), animación de muerte
 src/entities/Lucky.js   Compañero: flota, auto-dispara al enemigo más cercano
 src/scenes/BootScene.js Genera texturas/arte y arranca
-src/scenes/MenuScene.js Título (usa ita_poster)
+src/scenes/MenuScene.js Título (usa ita_poster) → Selección de personaje
+src/scenes/CharacterSelectScene.js  Tarjetas de personaje (CHARACTERS) — extensible
 src/scenes/GameScene.js Gameplay: mundo, colisiones, HUD, progresión, efectos
 src/scenes/EndScene.js  Victoria / game over
+manifest.webmanifest    PWA: nombre, iconos, display standalone, landscape
+sw.js                   Service worker (instalable + offline)
+icon-*.png              Iconos PWA (generados por tools/make_icons.py)
 tools/crop.ps1          Recorta sprites de imágenes fuente (.NET System.Drawing)
 tools/cutout.ps1        (Obsoleto) intento de quitar fondo por flood-fill
 assets/                 Imágenes originales (Ita Ita.png, Lucky.png) + recortes
@@ -114,6 +118,52 @@ Al acabar munición vuelve a Escuadra.
     Barra de vida en HUD. Derrotarlo = completa el nivel (ya no hay bandera de meta
     en niveles con jefe). N1: **EL PATRÓN** (1200 HP) · N2: **EL GENERAL** (1600 HP).
 
+## ✅ Hecho (cuarta iteración 2026-06-02)
+17. **PWA instalable**: `manifest.webmanifest` + `sw.js` (service worker:
+    navegación network-first, CDN cache-first, resto stale-while-revalidate) +
+    iconos generados por código (`tools/make_icons.py`, PNG en Python puro:
+    `icon-192/512.png`, `apple-touch-icon.png`). Botón "Instalar app" en
+    `index.html` (usa `beforeinstallprompt`). `serve.ps1`/`serve-lan.ps1` ahora
+    sirven `.webmanifest`. Objetivo: instalar como app y quitar la barra del
+    navegador (que tapaba los controles).
+18. **Fix móvil (¡clave!)**: el lienzo ya NO se corta tras la barra de
+    direcciones. `index.html` mide el alto VISIBLE real (`visualViewport`/
+    `innerHeight` → variable `--app-height`, con `100dvh` de respaldo) y reajusta
+    Phaser (`scale.refresh`) al rotar o mostrar/ocultar la barra.
+19. **Selección de personaje** (`src/scenes/CharacterSelectScene.js`,
+    `CHARACTERS` en config.js): tarjetas extensibles (toca para elegir, doble
+    toque/Enter para jugar). Incluye Ita y el Tanque; Lucky y "¿?" bloqueados
+    (placeholders para futuros personajes). Menú → Selección → Juego.
+20. **Tanque jugable "El Slug"** (`CharacterArt._buildTank`, modo en `Player`):
+    `enterTank/exitTank`, blindaje propio (barra en HUD), cañón explosivo
+    (`WEAPONS.canon`), orugas animadas, salto corto. Se obtiene como pickup
+    `tanque` en los niveles o eligiéndolo en la selección. Al agotarse el
+    blindaje, Ita sale a pie.
+21. **Ita más fiel a la referencia**: melena castaña más voluminosa/ondulada,
+    ombligo a la vista (chaleco abierto), mejor sombreado.
+22. **Escenario más Metal Slug**: props de guerra (sacos terreros, tambos con
+    franja de peligro, escombros) + **viñeta atmosférica** cinemática, cuidando
+    la identidad sinaloense.
+23. **Herramienta de dev** `tools/render.js`: previsualiza el arte por código en
+    PNG (mock de canvas en Node). Salida en `tools/preview/` (ignorada por git).
+
+## ✅ Hecho (quinta iteración 2026-06-02)
+24. **La Choco jugable** (Prisionera 4027): nuevo personaje a pie con su arte
+    pixel-art por código (`CharacterArt._drawChoco`: melena rubia rizada, top
+    negro, overol amarillo, subfusil) + anims (`choco-idle/run/jump`). `Player`
+    ahora usa `this.skin` (ita|choco) para texturas/anims a pie. Tarjeta en
+    `CHARACTERS` (se quitó el placeholder "¿?").
+25. **Cuchillazo a quemarropa** (Ita y La Choco): mismo botón de tiro. Si hay un
+    enemigo enfrente y muy cerca (`meleeRange`), se apuñala en vez de disparar
+    (estilo Metal Slug). `Player.tryMelee` + efecto `GameScene.meleeSlash` +
+    sonido `slash`. Un tajo liquida a un chairo; también daña al jefe.
+26. **Cañonazo del tanque**: en el tanque, el botón de granada lanza un proyectil
+    explosivo pesado (`Player.fireCannonBlast`, sonido `cannon`) en vez de la
+    granada piña. HUD muestra "💥 CAÑONAZO".
+27. **Continuar donde moriste**: al morir con vidas restantes, revives en el
+    último suelo firme SIN reiniciar el nivel (enemigos abatidos, armas y jefe
+    conservan su estado). `GameScene.respawnPlayer` + seguimiento de `safeX/safeY`.
+
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).
 - **Más enemigos / variedad**: chairo con cuerno y otros tipos.
@@ -122,6 +172,6 @@ Al acabar munición vuelve a Escuadra.
 - **Enemigos en plataformas** (ahora solo andan en el suelo).
 - **Balance**: dificultad, cantidad de enemigos, vida.
 - **Nivel 2**: revisar a fondo (probado poco).
-- **Mejoras de jugabilidad**: agacharse, recarga, melee, checkpoints.
+- **Mejoras de jugabilidad**: agacharse, recarga.
 - (Opcional) animación de disparo dedicada para Ita (frame de brazo distinto).
 - (Opcional) outline a los landmarks grandes (catedral/mercado) si se ven planos.

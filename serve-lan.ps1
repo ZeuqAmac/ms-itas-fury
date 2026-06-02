@@ -71,6 +71,7 @@ Write-Host "==================================================================" 
 $mime = @{
   '.html'='text/html; charset=utf-8'; '.js'='application/javascript; charset=utf-8';
   '.css'='text/css'; '.png'='image/png'; '.jpg'='image/jpeg'; '.json'='application/json';
+  '.webmanifest'='application/manifest+json; charset=utf-8'; '.ico'='image/x-icon';
 }
 
 while ($listener.IsListening) {

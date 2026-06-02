@@ -66,17 +66,14 @@ class MenuScene extends Phaser.Scene {
     }).setOrigin(0, 0).setDepth(31);
 
     // --- Botón jugar ---
-    const start = this.add.text(W * 0.30, H - 30, '▶  TOCA O PRESIONA ENTER PARA JUGAR', {
+    const start = this.add.text(W * 0.30, H - 30, '▶  TOCA O PRESIONA ENTER PARA EMPEZAR', {
       fontFamily: 'Trebuchet MS', fontStyle: 'bold', fontSize: '19px', color: '#2b1a0e',
       backgroundColor: '#ffd24a', padding: { x: 14, y: 7 },
     }).setOrigin(0.5).setDepth(40);
     this.tweens.add({ targets: start, alpha: 0.4, yoyo: true, repeat: -1, duration: 600 });
 
     const go = () => {
-      GAME_STATE.level = 0;
-      GAME_STATE.lives = 3;
-      GAME_STATE.score = 0;
-      this.scene.start('GameScene');
+      this.scene.start('CharacterSelectScene');
     };
     this.input.keyboard.once('keydown-ENTER', go);
     this.input.keyboard.once('keydown-SPACE', go);

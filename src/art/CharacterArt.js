@@ -8,9 +8,11 @@ const CharacterArt = {
 
   build(scene) {
     this._buildIta(scene);
+    this._buildChoco(scene);
     this._buildLucky(scene);
     this._buildChairo(scene);
     this._buildBoss(scene);
+    this._buildTank(scene);
     this._anims(scene);
   },
 
@@ -30,7 +32,7 @@ const CharacterArt = {
 
   _drawIta(p, fr) {
     const skin = 0xe8b184, skinHi = 0xf4c79a, skinSh = 0xc28a5c;
-    const hair = 0x3a2412, hairMid = 0x5a3a1d, hairHi = 0x8a5a2c;
+    const hair = 0x4d2e15, hairMid = 0x774925, hairHi = 0xa3692f;
     const vest = 0x1e1e1e, vestMid = 0x343434, vestHi = 0x4c4c4c;
     const top = 0x2f8f8f, topHi = 0x57bcbc;
     const camo = 0x6e7a44, camoD = 0x49532c, camoL = 0x93a05f, blot = 0x383f1e;
@@ -55,11 +57,13 @@ const CharacterArt = {
       p(boot, x, y + 14, 7, 4); p(bootHi, x, y + 14, 7, 1);
     };
 
-    // --- cabello trasero (melena larga y ondulada) ---
-    p(hair, 3, 4 + oy, 9, 24);
-    p(hair, 2, 11 + oy, 3, 12);                     // onda externa
-    p(hair, 4, 26 + oy, 7, 12);                     // largo
-    p(hairMid, 4, 6 + oy, 3, 18); p(hairHi, 5, 9 + oy, 2, 12);
+    // --- cabello trasero (melena larga, voluminosa y ondulada) ---
+    p(hair, 2, 3 + oy, 11, 26);                     // mata principal
+    p(hair, 0, 9 + oy, 3, 14);                      // onda externa (volumen)
+    p(hair, 1, 22 + oy, 4, 9);                      // rizo bajo
+    p(hair, 4, 27 + oy, 8, 13);                     // largo que cae
+    p(hairMid, 3, 6 + oy, 4, 20); p(hairHi, 4, 9 + oy, 2, 14);
+    p(hairHi, 2, 16 + oy, 1, 8);                    // brillo de la onda
 
     // --- brazo trasero ---
     p(skinSh, 7, 17 + oy, 4, 9);
@@ -70,8 +74,10 @@ const CharacterArt = {
 
     // --- torso: chaleco negro abierto + top teal ---
     p(vest, 9, 15 + oy, 15, 16); p(vestMid, 9, 15 + oy, 15, 2); p(vestHi, 9, 15 + oy, 2, 16);
-    p(top, 14, 16 + oy, 6, 8); p(topHi, 14, 16 + oy, 2, 8);
+    p(top, 14, 16 + oy, 6, 6); p(topHi, 14, 16 + oy, 2, 6);
     p(skin, 16, 16 + oy, 2, 3);                     // escote
+    p(skin, 14, 22 + oy, 6, 7);                     // ombligo a la vista (chaleco abierto)
+    p(skinSh, 14, 22 + oy, 1, 7); p(skinSh, 16, 25 + oy, 1, 1);
     p(ink, 13, 16 + oy, 1, 14); p(ink, 20, 16 + oy, 1, 14);   // cierres
     p(0x121212, 10, 23 + oy, 3, 4); p(0x121212, 20, 23 + oy, 3, 4); // bolsas
     p(0x2a1d12, 9, 29 + oy, 15, 3); p(buckle, 15, 29 + oy, 4, 3);   // cinturón
@@ -102,6 +108,94 @@ const CharacterArt = {
     p(gun, 21, 22 + oy, 13, 2); p(gunHi, 21, 22 + oy, 13, 1);   // cañón
     p(mag, 22, 24 + oy, 4, 5); p(mag, 24, 28 + oy, 3, 3);       // cargador curvo
     p(gun, 32, 21 + oy, 2, 2);                       // alza
+  },
+
+  // -------------------------------------------------------
+  //  LA CHOCO  (34 x 50) — Prisionera 4027
+  //  Overol amarillo + top negro, melena rubia rizada y voluminosa.
+  // -------------------------------------------------------
+  _buildChoco(scene) {
+    const W = 34, H = 50;
+    ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump'].forEach(fr => {
+      this._sprite(scene, 'choco_' + fr, W, H, p => this._drawChoco(p, fr));
+    });
+  },
+
+  _drawChoco(p, fr) {
+    const skin = 0xe8b184, skinHi = 0xf4c79a, skinSh = 0xc28a5c;
+    const hair = 0x8a5a22, hairMid = 0xb6822f, hairHi = 0xe6bc5e;   // rubio rojizo rizado
+    const top = 0x1b1b1b, topMid = 0x333333, topHi = 0x4a4a4a;       // top negro
+    const suit = 0xe0a92a, suitSh = 0xa87c18, suitHi = 0xf6c84e;     // overol amarillo
+    const boot = 0x281a0e, bootHi = 0x4a331c;
+    const gun = 0x242424, gunHi = 0x6e6e6e, mag = 0x171717;
+    const glove = 0x141414, eyeW = 0xf7f2ea, ink = 0x0a0a0a;
+    const lip = 0xbe5566, teeth = 0xffffff, brow = 0x4a2f12, blush = 0xe79a86, zip = 0x9a7414;
+
+    let bob = 0, lf = 0, lb = 0;
+    if (fr === 'idle1') bob = 1;
+    if (fr === 'run0') { lf = 3; lb = -3; }
+    if (fr === 'run1') { lf = 1; lb = 1; bob = -1; }
+    if (fr === 'run2') { lf = -3; lb = 3; }
+    if (fr === 'run3') { lf = 1; lb = 1; bob = -1; }
+    if (fr === 'jump') { lf = 2; lb = -4; bob = -2; }
+    const oy = bob;
+
+    // pierna con overol amarillo + bota
+    const leg = (x, y) => {
+      p(suit, x, y, 7, 14); p(suitSh, x, y, 2, 14); p(suitHi, x + 4, y + 1, 1, 11);
+      p(suitSh, x, y + 9, 7, 1);                      // pliegue rodilla
+      p(boot, x, y + 14, 7, 4); p(bootHi, x, y + 14, 7, 1);
+    };
+
+    // --- cabello trasero (melena rubia muy voluminosa y rizada) ---
+    p(hair, 1, 3 + oy, 12, 27);                     // mata principal
+    p(hair, 0, 8 + oy, 3, 16);                      // onda externa (volumen)
+    p(hair, 1, 23 + oy, 5, 11);                     // rizo bajo
+    p(hair, 4, 28 + oy, 9, 13);                     // largo que cae
+    p(hairMid, 2, 6 + oy, 5, 22); p(hairHi, 3, 9 + oy, 2, 15);
+    p(hairHi, 1, 17 + oy, 1, 9);                    // brillo de la onda
+
+    // --- brazo trasero ---
+    p(skinSh, 7, 17 + oy, 4, 9);
+
+    // --- piernas ---
+    leg(11 + lb, 31 + oy);
+    leg(17 + lf, 31 + oy);
+
+    // --- torso: top negro + overol amarillo amarrado a la cintura ---
+    p(top, 9, 15 + oy, 15, 14); p(topMid, 9, 15 + oy, 15, 2); p(topHi, 9, 15 + oy, 2, 14);
+    p(skin, 16, 15 + oy, 3, 3);                     // escote
+    p(skin, 12, 16 + oy, 2, 2);                     // hombro a la vista
+    // mangas del overol amarradas a la cintura
+    p(suit, 8, 27 + oy, 17, 5); p(suitSh, 8, 30 + oy, 17, 2); p(suitHi, 8, 27 + oy, 17, 1);
+    p(suit, 7, 31 + oy, 4, 6); p(suitSh, 7, 31 + oy, 1, 6);     // manga colgando
+    p(zip, 16, 17 + oy, 1, 10);                     // cierre del top
+
+    // --- cuello + cabeza ---
+    p(skin, 15, 13 + oy, 4, 3);
+    p(skin, 11, 4 + oy, 12, 11);
+    p(skinSh, 20, 5 + oy, 3, 9); p(skinHi, 12, 5 + oy, 3, 4);
+    p(blush, 12, 11 + oy, 2, 1); p(blush, 20, 11 + oy, 2, 1);
+    // ojos
+    p(eyeW, 13, 8 + oy, 3, 3); p(ink, 14, 8 + oy, 2, 3);
+    p(eyeW, 18, 8 + oy, 3, 3); p(ink, 19, 8 + oy, 2, 3);
+    p(brow, 13, 6 + oy, 3, 1); p(brow, 18, 6 + oy, 3, 1);
+    // boca
+    p(lip, 14, 12 + oy, 6, 2); p(teeth, 15, 12 + oy, 4, 1);
+
+    // --- cabello frente/top (rizos voluminosos) + mechón sobre el hombro ---
+    p(hair, 8, 0 + oy, 17, 6); p(hairMid, 9, 1 + oy, 15, 2); p(hairHi, 11, 0 + oy, 8, 1);
+    p(hair, 8, 5 + oy, 3, 7);                        // fleco izq
+    p(hair, 22, 4 + oy, 4, 9);                       // fleco der
+    p(hair, 24, 14 + oy, 4, 14); p(hairHi, 25, 16 + oy, 1, 9);  // mechón sobre el hombro
+
+    // --- brazo delantero (guante) + subfusil ---
+    p(skin, 19, 17 + oy, 4, 5); p(skin, 21, 20 + oy, 6, 3);
+    p(glove, 26, 20 + oy, 5, 3); p(0x2a2a2a, 26, 20 + oy, 5, 1);
+    p(gun, 20, 21 + oy, 4, 6);                       // cajón
+    p(gun, 22, 22 + oy, 11, 2); p(gunHi, 22, 22 + oy, 11, 1);   // cañón corto
+    p(mag, 22, 24 + oy, 3, 5);                        // cargador recto
+    p(gun, 31, 21 + oy, 2, 2);                        // alza
   },
 
   // -------------------------------------------------------
@@ -257,6 +351,60 @@ const CharacterArt = {
   },
 
   // -------------------------------------------------------
+  //  TANQUE "El Slug" (74 x 48) — Ita asomada, cañón y orugas
+  // -------------------------------------------------------
+  _buildTank(scene) {
+    const W = 74, H = 48;
+    ['0', '1'].forEach(fr => {
+      Pixel.sprite(scene, 'tank_body' + fr, W, H, (p, ctx) => this._drawTank(p, ctx, fr));
+    });
+  },
+
+  _drawTank(p, ctx, fr) {
+    const hull = 0x5d6b39, hullHi = 0x83924f, hullSh = 0x3d4824;
+    const tread = 0x1f2124, treadHi = 0x3a3d40, wheel = 0x4a4d50, hub = 0x80868c;
+    const barrel = 0x2f3236, barrelHi = 0x5a5f64, muzzle = 0x111316;
+    const glass = 0x8fe0e0, glassHi = 0xc9f6f6, frame = 0x2e3622, gold = 0xe9c45a;
+    const skin = 0xe8b184, hair = 0x4a2e16, hairHi = 0x7a4a22, ink = 0x0a0a0a;
+
+    // --- Orugas (banda + ruedas + cleats que avanzan) ---
+    p(tread, 2, 32, 70, 14);
+    p(treadHi, 2, 32, 70, 2);
+    p(0x101214, 2, 44, 70, 2);
+    const arc = (x, y, r, c) => { ctx.fillStyle = Pixel.col(c); ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
+    [10, 22, 34, 46, 58, 68].forEach(wx => { arc(wx, 38, 5, wheel); arc(wx, 38, 2, hub); });
+    const off = fr === '1' ? 4 : 0;
+    for (let x = 4; x < 72; x += 8) { p(treadHi, ((x + off) % 70) + 2, 32, 3, 2); p(0x101214, ((x + off + 4) % 70) + 2, 43, 3, 1); }
+
+    // --- Casco / hull (con bisel frontal) ---
+    p(hullSh, 6, 28, 60, 6);
+    p(hull, 8, 16, 56, 16); p(hullHi, 8, 16, 56, 3); p(hullSh, 8, 29, 56, 3);
+    ctx.fillStyle = Pixel.col(hull); ctx.beginPath();
+    ctx.moveTo(60, 16); ctx.lineTo(70, 24); ctx.lineTo(60, 32); ctx.fill();   // morro inclinado
+    ctx.fillStyle = Pixel.col(hullSh); ctx.beginPath();
+    ctx.moveTo(64, 26); ctx.lineTo(70, 24); ctx.lineTo(64, 32); ctx.fill();
+    // estrella dorada en el costado
+    p(gold, 16, 22, 4, 2); p(gold, 17, 20, 2, 6); p(gold, 14, 23, 8, 2);
+
+    // --- Cabina / domo donde Ita se asoma ---
+    p(frame, 22, 4, 22, 13); p(frame, 22, 4, 22, 2);
+    p(glass, 24, 7, 18, 9); p(glassHi, 24, 7, 6, 2);
+    // Ita asomada
+    p(hair, 28, 1, 12, 7); p(hairHi, 29, 2, 3, 3);
+    p(skin, 30, 4, 8, 6);
+    p(ink, 31, 6, 2, 2); p(ink, 35, 6, 2, 2);   // ojos
+    p(0xbe5566, 32, 9, 4, 1);                     // sonrisa
+
+    // --- Cañón (apunta a la derecha) ---
+    p(barrel, 40, 19, 30, 7); p(barrelHi, 40, 19, 30, 2);
+    p(barrel, 38, 17, 8, 11);                      // base del cañón
+    p(muzzle, 68, 18, 5, 9); p(barrelHi, 68, 18, 5, 1);  // boca
+
+    // --- Sombra de contacto inferior ---
+    p(0x101214, 6, 45, 62, 1);
+  },
+
+  // -------------------------------------------------------
   //  Animaciones
   // -------------------------------------------------------
   _anims(scene) {
@@ -267,9 +415,13 @@ const CharacterArt = {
     mk('ita-idle', ['ita_idle0', 'ita_idle1'], 3, -1);
     mk('ita-run', ['ita_run0', 'ita_run1', 'ita_run2', 'ita_run3'], 12, -1);
     mk('ita-jump', ['ita_jump'], 1, 0);
+    mk('choco-idle', ['choco_idle0', 'choco_idle1'], 3, -1);
+    mk('choco-run', ['choco_run0', 'choco_run1', 'choco_run2', 'choco_run3'], 12, -1);
+    mk('choco-jump', ['choco_jump'], 1, 0);
     mk('lucky-idle', ['lucky_idle0', 'lucky_idle1'], 4, -1);
     mk('lucky-walk', ['lucky_walk0', 'lucky_walk1'], 9, -1);
     mk('chairo-walk', ['chairo_walk0', 'chairo_walk1', 'chairo_walk2', 'chairo_walk3'], 8, -1);
+    mk('tank-roll', ['tank_body0', 'tank_body1'], 8, -1);
   },
 };
 

@@ -7,6 +7,7 @@
 const SceneryArt = {
 
   build(scene) {
+    this._vignette(scene);
     this._sky(scene, 'sky_culiacan', [0x274a6e, 0x6e7f8c, 0xe79a52]);
     this._sky(scene, 'sky_jardin',   [0x6fb0d6, 0x9fc9c0, 0xd9ecb0]);
     this._skyline(scene);
@@ -16,6 +17,67 @@ const SceneryArt = {
     this._house(scene);
     this._palm(scene);
     this._planter(scene);
+    this._sandbags(scene);
+    this._barrel(scene);
+    this._rubble(scene);
+  },
+
+  // ---------- Sacos terreros (barricada estilo Metal Slug) ----------
+  _sandbags(scene) {
+    Pixel.sprite(scene, 'sandbags', 76, 44, (p, ctx) => {
+      const tan = 0xb89a5e, tanSh = 0x8f7440, tanHi = 0xd4b87a, str = 0x6e5a30;
+      const bag = (x, y) => {
+        p(tan, x, y, 18, 11); p(tanHi, x, y, 18, 3); p(tanSh, x, y + 8, 18, 3);
+        p(str, x + 8, y, 2, 11);              // costura
+        p(tanSh, x, y, 2, 11);
+      };
+      // tres hileras escalonadas
+      for (let i = 0; i < 4; i++) bag(2 + i * 18, 32);
+      for (let i = 0; i < 3; i++) bag(11 + i * 18, 21);
+      for (let i = 0; i < 2; i++) bag(20 + i * 18, 10);
+    });
+  },
+
+  // ---------- Tambo de petróleo (oxidado, con franja de peligro) ----------
+  _barrel(scene) {
+    Pixel.sprite(scene, 'barrel', 30, 44, (p, ctx) => {
+      const body = 0xb44a2a, bodyHi = 0xd66a44, bodySh = 0x7e3018, ring = 0x3a2418;
+      p(body, 4, 2, 22, 40); p(bodyHi, 6, 2, 4, 40); p(bodySh, 22, 2, 4, 40);
+      p(ring, 4, 2, 22, 3); p(ring, 4, 39, 22, 3);
+      p(ring, 4, 19, 22, 3);
+      // franja de peligro
+      p(0xe8c038, 4, 9, 22, 6);
+      for (let x = 4; x < 26; x += 6) p(0x1c1c1c, x, 9, 3, 6);
+      p(0x2a1810, 9, 5, 12, 2);             // tapa
+    });
+  },
+
+  // ---------- Escombros / cascajo (textura de guerra MS) ----------
+  _rubble(scene) {
+    Pixel.sprite(scene, 'rubble', 64, 22, (p, ctx) => {
+      const a = 0x7a6450, b = 0x5e4c3a, c = 0x9a836a, d = 0x3e3226;
+      p(b, 0, 10, 64, 12);
+      const chunk = (x, y, w, h, col) => { p(col, x, y, w, h); p(d, x, y + h - 1, w, 1); };
+      chunk(2, 12, 12, 8, a); chunk(16, 14, 9, 6, c); chunk(27, 11, 14, 9, a);
+      chunk(43, 13, 10, 7, c); chunk(54, 12, 9, 8, a);
+      p(c, 6, 9, 4, 3); p(c, 33, 8, 5, 3); p(c, 49, 9, 4, 3);
+    });
+  },
+
+  // ---------- Viñeta atmosférica (marco cinemático estilo MS) ----------
+  _vignette(scene) {
+    const W = CONST.WIDTH, H = CONST.HEIGHT;
+    Pixel.sprite(scene, 'vignette', W, H, (p, ctx) => {
+      const g = ctx.createRadialGradient(W / 2, H * 0.46, H * 0.28, W / 2, H / 2, H * 0.9);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(0.72, 'rgba(18,9,7,0.12)');
+      g.addColorStop(1, 'rgba(8,5,5,0.58)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      // franjas oscuras arriba/abajo para encuadre
+      const tg = ctx.createLinearGradient(0, 0, 0, 60);
+      tg.addColorStop(0, 'rgba(8,5,8,0.5)'); tg.addColorStop(1, 'rgba(8,5,8,0)');
+      ctx.fillStyle = tg; ctx.fillRect(0, 0, W, 60);
+    }, null);
   },
 
   // ---------- Cielo (gradiente + sol + nubes), sin contorno ----------
@@ -211,6 +273,23 @@ const SceneryArt = {
     for (let x = 420; x < W - 200; x += planterStep) {
       scene.add.image(x, gy + 8, 'planter').setOrigin(0.5, 1).setScrollFactor(1).setDepth(3);
     }
+
+    // --- Props "de guerra" estilo Metal Slug (sacos, tambos, escombros) ---
+    // Se reparten de forma determinista para servir de cobertura/decoración.
+    for (let x = 520, i = 0; x < W - 240; x += 470, i++) {
+      scene.add.image(x, gy + 9, 'sandbags').setOrigin(0.5, 1).setScrollFactor(1)
+        .setDepth(4).setScale(1.15);
+    }
+    for (let x = 360, i = 0; x < W - 200; x += 540, i++) {
+      const img = scene.add.image(x, gy + 9, 'barrel').setOrigin(0.5, 1).setScrollFactor(1).setDepth(4);
+      if (i % 2 === 1) img.setFlipX(true);
+    }
+    for (let x = 180; x < W; x += 300) {
+      scene.add.image(x, gy + 12, 'rubble').setOrigin(0.5, 1).setScrollFactor(1).setDepth(3).setAlpha(0.95);
+    }
+
+    // viñeta atmosférica fija (encuadra y oscurece los bordes)
+    scene.add.image(0, 0, 'vignette').setOrigin(0, 0).setScrollFactor(0).setDepth(900);
   },
 };
 
