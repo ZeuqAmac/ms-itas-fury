@@ -147,6 +147,23 @@ Al acabar munición vuelve a Escuadra.
 23. **Herramienta de dev** `tools/render.js`: previsualiza el arte por código en
     PNG (mock de canvas en Node). Salida en `tools/preview/` (ignorada por git).
 
+## ✅ Hecho (quinta iteración 2026-06-02)
+24. **La Choco jugable** (Prisionera 4027): nuevo personaje a pie con su arte
+    pixel-art por código (`CharacterArt._drawChoco`: melena rubia rizada, top
+    negro, overol amarillo, subfusil) + anims (`choco-idle/run/jump`). `Player`
+    ahora usa `this.skin` (ita|choco) para texturas/anims a pie. Tarjeta en
+    `CHARACTERS` (se quitó el placeholder "¿?").
+25. **Cuchillazo a quemarropa** (Ita y La Choco): mismo botón de tiro. Si hay un
+    enemigo enfrente y muy cerca (`meleeRange`), se apuñala en vez de disparar
+    (estilo Metal Slug). `Player.tryMelee` + efecto `GameScene.meleeSlash` +
+    sonido `slash`. Un tajo liquida a un chairo; también daña al jefe.
+26. **Cañonazo del tanque**: en el tanque, el botón de granada lanza un proyectil
+    explosivo pesado (`Player.fireCannonBlast`, sonido `cannon`) en vez de la
+    granada piña. HUD muestra "💥 CAÑONAZO".
+27. **Continuar donde moriste**: al morir con vidas restantes, revives en el
+    último suelo firme SIN reiniciar el nivel (enemigos abatidos, armas y jefe
+    conservan su estado). `GameScene.respawnPlayer` + seguimiento de `safeX/safeY`.
+
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).
 - **Más enemigos / variedad**: chairo con cuerno y otros tipos.
@@ -155,6 +172,6 @@ Al acabar munición vuelve a Escuadra.
 - **Enemigos en plataformas** (ahora solo andan en el suelo).
 - **Balance**: dificultad, cantidad de enemigos, vida.
 - **Nivel 2**: revisar a fondo (probado poco).
-- **Mejoras de jugabilidad**: agacharse, recarga, melee, checkpoints.
+- **Mejoras de jugabilidad**: agacharse, recarga.
 - (Opcional) animación de disparo dedicada para Ita (frame de brazo distinto).
 - (Opcional) outline a los landmarks grandes (catedral/mercado) si se ven planos.

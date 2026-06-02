@@ -61,8 +61,13 @@ const WEAPON_ORDER = ['escuadra', 'cuerno', 'escopeta', 'bazuca'];
 const CHARACTERS = [
   {
     id: 'ita', name: 'ITA ITA', tag: 'La Reina de Sinaloa',
-    desc: 'Ágil y letal. Domina el cuerno de chivo y la granada piña.',
+    desc: 'Ágil y letal. Cuerno de chivo, granada piña y cuchillo a quemarropa.',
     sprite: 'ita_idle0', anim: 'ita-idle', scale: 5.4, locked: false,
+  },
+  {
+    id: 'choco', name: 'LA CHOCO', tag: 'La Prisionera 4027',
+    desc: 'Ruda y sin miedo. Reparte plomo y puñaladas cuando se le acercan.',
+    sprite: 'choco_idle0', anim: 'choco-idle', scale: 5.4, locked: false,
   },
   {
     id: 'tanque', name: 'EL TANQUE', tag: 'Blindado "El Slug"',
@@ -73,11 +78,6 @@ const CHARACTERS = [
     id: 'lucky', name: 'LUCKY', tag: 'Perro artillero',
     desc: 'Próximamente jugable. Por ahora te acompaña en el nivel.',
     sprite: 'lucky_idle0', anim: 'lucky-idle', scale: 4.6, locked: true,
-  },
-  {
-    id: 'misterio', name: '¿?', tag: 'Próximamente',
-    desc: 'Nuevo personaje en camino. ¡Aguanta vara!',
-    sprite: null, scale: 4, locked: true,
   },
 ];
 

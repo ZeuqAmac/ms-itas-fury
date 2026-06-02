@@ -7,10 +7,13 @@ const TANK_SCALE = 2.5;
 
 class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
-    super(scene, x, y, 'ita_idle0');
+    // Skin a pie según el personaje elegido (Ita o La Choco).
+    const skin = (GAME_STATE.character === 'choco') ? 'choco' : 'ita';
+    super(scene, x, y, skin + '_idle0');
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
+    this.skin = skin;            // prefijo de texturas/anims a pie
     this.setScale(ITA_SCALE);
     this.setDepth(10);
     this.setCollideWorldBounds(true);
@@ -26,6 +29,9 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.ammo = {};
     this.grenades = 3;
     this.lastShot = 0;
+    this.lastMelee = 0;          // cooldown del cuchillazo
+    this.lastCannon = 0;         // cooldown del cañonazo del tanque
+    this.meleeRange = 58;        // distancia para apuñalar en vez de disparar
     this.invuln = false;
     this.wasOnGround = true;
     this.runDustAt = 0;
@@ -35,7 +41,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.shield = 0;             // blindaje del tanque
     this.maxShield = 0;
 
-    this.play('ita-idle');
+    this.play(this.skin + '-idle');
 
     // Arranque montado en el tanque si así se eligió en la selección
     if (GAME_STATE.character === 'tanque') this.enterTank(true);
@@ -70,11 +76,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.shield = 0; this.maxShield = 0;
     this.weapon = this.prevWeapon || 'escuadra';
 
-    this.setTexture('ita_idle0');
+    this.setTexture(this.skin + '_idle0');
     this.setScale(ITA_SCALE);
     this.body.setSize(14, 45);
     this.body.setOffset(10, 4);
-    this.play('ita-idle');
+    this.play(this.skin + '-idle');
 
     this.invuln = true;
     this.scene.time.delayedCall(1100, () => { this.invuln = false; });
@@ -107,9 +113,9 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     // animación según estado
-    if (!onGround) this.anims.play('ita-jump', true);
-    else if (vx !== 0) this.anims.play('ita-run', true);
-    else this.anims.play('ita-idle', true);
+    if (!onGround) this.anims.play(this.skin + '-jump', true);
+    else if (vx !== 0) this.anims.play(this.skin + '-run', true);
+    else this.anims.play(this.skin + '-idle', true);
 
     // aterrizaje -> polvo + squash
     if (onGround && !this.wasOnGround) {
@@ -123,7 +129,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
     this.wasOnGround = onGround;
 
-    if (scene.btnShoot()) this.tryShoot(time);
+    // Botón de tiro: si hay un enemigo a quemarropa, da un cuchillazo
+    // (estilo Metal Slug); si no, dispara el arma equipada.
+    if (scene.btnShoot()) {
+      if (!this.tryMelee(time)) this.tryShoot(time);
+    }
     if (scene.btnGrenadeJust()) this.throwGrenade();
   }
 
@@ -153,7 +163,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (scene.btnShoot()) this.tryShoot(time);
-    if (scene.btnGrenadeJust()) this.throwGrenade();
+    // En el tanque el botón de granada lanza un CAÑONAZO demoledor.
+    if (scene.btnGrenadeJust()) this.fireCannonBlast(time);
   }
 
   stretch() {
@@ -201,6 +212,66 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.grenades -= 1;
     this.scene.spawnGrenade(this.x + this.dir * 18, this.y - 10, this.dir);
     SFX.play('throw');
+  }
+
+  // Cuchillazo a quemarropa (Ita / La Choco). Si hay un enemigo enfrente y
+  // muy cerca, se apuñala en vez de disparar (mismo botón). Devuelve true
+  // cuando hay un objetivo a melee (aunque el cooldown impida golpear), para
+  // que el jugador no malgaste balas con el enemigo encima.
+  tryMelee(time) {
+    if (this.mode === 'tank') return false;
+    const range = this.meleeRange, dir = this.dir;
+    const scene = this.scene;
+
+    let target = null, td = range;
+    const enemies = scene.enemies ? scene.enemies.getChildren() : [];
+    for (const e of enemies) {
+      if (!e.active || e._dying) continue;
+      if (Math.abs(e.y - this.y) > 52) continue;
+      const dx = e.x - this.x;
+      if (dir > 0 ? dx < -14 : dx > 14) continue;   // debe estar al frente
+      const ad = Math.abs(dx);
+      if (ad <= range && ad < td) { td = ad; target = e; }
+    }
+
+    const boss = scene.boss;
+    let bossInRange = false;
+    if (boss && boss.active && !boss.dead) {
+      const dx = boss.x - this.x;
+      if (Math.abs(boss.y - this.y) < 80 && Math.abs(dx) <= range + 26 &&
+          (dir > 0 ? dx > -24 : dx < 24)) bossInRange = true;
+    }
+
+    if (!target && !bossInRange) return false;
+
+    if (time >= this.lastMelee + 300) {
+      this.lastMelee = time;
+      scene.meleeSlash(this.x + dir * 28, this.y - 4, dir);
+      SFX.play('slash');
+      if (target) target.hit(100);          // un tajo liquida a un chairo
+      if (bossInRange) boss.hit(45);
+      // pequeño "punch" de escala (no toca la posición para no pelear con la física)
+      this.scene.tweens.add({
+        targets: this, scaleX: ITA_SCALE * 1.12, scaleY: ITA_SCALE * 0.94,
+        duration: 70, yoyo: true,
+      });
+    }
+    return true;
+  }
+
+  // Cañonazo del tanque (botón de granada). Proyectil explosivo pesado.
+  fireCannonBlast(time) {
+    if (this.mode !== 'tank') return;
+    if (time < this.lastCannon + 650) return;
+    this.lastCannon = time;
+    const dir = this.dir;
+    const gx = this.x + dir * 82, gy = this.y - 4;
+    const shell = { dmg: 240, speed: 820, color: 0xfff0b0, size: 4, explosive: true };
+    this.scene.spawnPlayerBullet(gx, gy, dir * shell.speed, 0, shell);
+    this.scene.muzzle(gx, gy, dir, shell.color);
+    this.scene.boom(gx + dir * 12, gy, 0.9);
+    this.scene.cameras.main.shake(220, 0.012);
+    SFX.play('cannon');
   }
 
   giveWeapon(type) {

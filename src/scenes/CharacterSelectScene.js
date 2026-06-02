@@ -22,7 +22,7 @@ class CharacterSelectScene extends Phaser.Scene {
     }).setOrigin(0.5, 0);
 
     // --- Tarjetas ---
-    const previewScale = { ita: 2.3, tanque: 1.55, lucky: 2.5 };
+    const previewScale = { ita: 2.3, choco: 2.3, tanque: 1.55, lucky: 2.5 };
     const n = CHARACTERS.length;
     const cw = 196, gap = 18, panelW = 178, panelH = 300;
     const totalW = n * cw + (n - 1) * gap;

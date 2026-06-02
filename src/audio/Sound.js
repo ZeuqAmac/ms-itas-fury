@@ -102,6 +102,13 @@ const SFX = {
         this._sweep(420, 110, t, 0.22, 'sawtooth', 0.28); break;
       case 'throw':
         this._sweep(200, 900, t, 0.2, 'triangle', 0.16); break;
+      case 'slash':
+        this._sweep(1700, 480, t, 0.08, 'square', 0.12);
+        this._noiseHit(0.07, 5200, 800, 0.18); break;
+      case 'cannon':
+        this._sweep(360, 80, t, 0.3, 'sawtooth', 0.34);
+        this._noiseHit(0.32, 1800, 220, 0.55);
+        this._tone(58, t, 0.32, 'sine', 0.5); break;
       case 'powerup':
         [523, 659, 784, 1046].forEach((f, i) => this._tone(f, t + i * 0.06, 0.12, 'square', 0.2)); break;
       case 'heal':

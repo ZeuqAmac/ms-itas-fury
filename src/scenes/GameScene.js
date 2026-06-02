@@ -44,6 +44,12 @@ class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.floors);
     this.physics.add.collider(this.player, this.platforms);
 
+    // Punto seguro de reaparición: al morir (con vidas) revives aquí, sin
+    // reiniciar el nivel. Se actualiza mientras pisas suelo firme.
+    this.safeX = this.player.x;
+    this.safeY = this.player.y;
+    this._respawning = false;
+
     // --- Peligros (brasas / agua) — requiere que el jugador ya exista ---
     this.buildHazards(this.level.hazards || []);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
@@ -305,6 +311,26 @@ class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: sm, scale: 1, alpha: 0, y: y - 12, duration: 320, onComplete: () => sm.destroy() });
   }
 
+  // Tajo de cuchillo: medialuna blanca rápida frente al jugador.
+  meleeSlash(x, y, dir) {
+    const ADD = Phaser.BlendModes.ADD;
+    const arc = this.add.image(x, y, 'spark').setTint(0xffffff)
+      .setScale(0.5, 1.7).setRotation(dir > 0 ? -0.5 : 0.5)
+      .setDepth(12).setBlendMode(ADD);
+    this.tweens.add({
+      targets: arc, scaleX: 2.2, scaleY: 0.4, alpha: 0,
+      rotation: arc.rotation + dir * 1.1, duration: 150,
+      onComplete: () => arc.destroy(),
+    });
+    for (let i = 0; i < 4; i++) {
+      const s = this.add.image(x, y, 'spark').setTint(0xbfeaff).setScale(0.3).setDepth(12).setBlendMode(ADD);
+      this.tweens.add({
+        targets: s, x: x + dir * Phaser.Math.Between(10, 36), y: y + Phaser.Math.Between(-16, 16),
+        scale: 0, alpha: 0, duration: 170, onComplete: () => s.destroy(),
+      });
+    }
+  }
+
   boom(x, y, scale = 1) {
     SFX.play('explosion');
     const ADD = Phaser.BlendModes.ADD;
@@ -535,8 +561,10 @@ class GameScene extends Phaser.Scene {
   }
 
   playerDied() {
-    if (this.levelDone) return;
+    if (this.levelDone || this._respawning) return;
+    this._respawning = true;
     this.player.setActive(false).setVisible(false);
+    if (this.player.body) this.player.body.enable = false;
     this.boom(this.player.x, this.player.y, 1.4);
     GAME_STATE.lives -= 1;
 
@@ -546,8 +574,35 @@ class GameScene extends Phaser.Scene {
       });
     } else {
       this.banner('¡TE DIERON CRANK! Vidas: ' + GAME_STATE.lives, '#ff6666');
-      this.time.delayedCall(1100, () => this.scene.restart());
+      // Reapareces donde caíste, SIN reiniciar el nivel (enemigos abatidos,
+      // armas recogidas y jefe conservan su estado).
+      this.time.delayedCall(1100, () => this.respawnPlayer());
     }
+  }
+
+  // Revive al jugador en el último suelo firme conservando el progreso.
+  respawnPlayer() {
+    const p = this.player;
+    if (p.mode === 'tank') p.exitTank(true);   // si murió en el tanque, baja a pie
+    p.hp = p.maxHp;
+    p.setPosition(this.safeX, this.safeY - 12);
+    p.setVelocity(0, 0);
+    if (p.body) p.body.enable = true;
+    p.setActive(true).setVisible(true).setAlpha(1);
+    p.clearTint();
+    p.dir = 1; p.setFlipX(false);
+    p.play(p.skin + '-idle', true);
+
+    // breve invulnerabilidad con parpadeo
+    p.invuln = true;
+    this.tweens.add({
+      targets: p, alpha: 0.3, yoyo: true, repeat: 9, duration: 90,
+      onComplete: () => p.setAlpha(1),
+    });
+    this.time.delayedCall(1600, () => { p.invuln = false; });
+
+    this.cameras.main.startFollow(p, true, 0.1, 0.1);
+    this._respawning = false;
   }
 
   completeLevel() {
@@ -624,7 +679,8 @@ class GameScene extends Phaser.Scene {
     const ammoVal = this.player.ammo[this.player.weapon];
     const ammo = wpn.ammo === Infinity ? '∞' : (ammoVal || 0);
     const icon = this.player.mode === 'tank' ? '🛡️' : '🔫';
-    this.hudWeapon.setText(icon + ' ' + wpn.name + '  [' + ammo + ']   💣 x' + this.player.grenades);
+    const special = this.player.mode === 'tank' ? '💥 CAÑONAZO' : '💣 x' + this.player.grenades;
+    this.hudWeapon.setText(icon + ' ' + wpn.name + '  [' + ammo + ']   ' + special);
     this.hudScore.setText('PUNTOS: ' + GAME_STATE.score);
     this.hudLevel.setText('Nivel ' + (this.levelIndex + 1) + ': ' + this.level.name);
     if (this.lucky && this.lucky.active) {
@@ -666,7 +722,16 @@ class GameScene extends Phaser.Scene {
 
   // ---------- Loop ----------
   update(time) {
-    if (this.player.active) this.player.update(time);
+    if (this.player.active) {
+      this.player.update(time);
+      // Recuerda la última posición en suelo firme (no sobre pozos) para
+      // reaparecer ahí si te matan.
+      const b = this.player.body;
+      if ((b.blocked.down || b.touching.down) && this.player.y < CONST.HEIGHT - 30) {
+        this.safeX = this.player.x;
+        this.safeY = this.player.y;
+      }
+    }
     if (this.lucky && this.lucky.active) this.lucky.update(time);
 
     // jefe: aparece al pasar el trigger y se actualiza
