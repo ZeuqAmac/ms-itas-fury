@@ -3,6 +3,7 @@
 // ============================================================
 
 const ITA_SCALE = 2.2;
+const TANK_SCALE = 2.5;
 
 class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
@@ -29,11 +30,67 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.wasOnGround = true;
     this.runDustAt = 0;
 
+    // --- Vehículo (tanque) ---
+    this.mode = 'foot';          // 'foot' | 'tank'
+    this.shield = 0;             // blindaje del tanque
+    this.maxShield = 0;
+
     this.play('ita-idle');
+
+    // Arranque montado en el tanque si así se eligió en la selección
+    if (GAME_STATE.character === 'tanque') this.enterTank(true);
+  }
+
+  // ---------- Tanque ----------
+  enterTank(silent) {
+    if (this.mode === 'tank' || !this.active) return;
+    this.mode = 'tank';
+    this.prevWeapon = (this.weapon !== 'canon') ? this.weapon : 'escuadra';
+    this.weapon = 'canon';
+    this.maxShield = 240; this.shield = 240;
+
+    this.setTexture('tank_body0');
+    this.setScale(TANK_SCALE);
+    this.body.setSize(60, 32);
+    this.body.setOffset(7, 14);
+    this.play('tank-roll');
+    this.y -= 8;                 // evita quedar incrustado en el suelo
+
+    this.invuln = true;
+    this.scene.time.delayedCall(700, () => { this.invuln = false; });
+    if (!silent) {
+      this.scene.boom(this.x, this.y, 1.2);
+      this.scene.banner('¡AL TANQUE, COMPA!', '#ffd24a');
+    }
+  }
+
+  exitTank(silent) {
+    if (this.mode !== 'tank') return;
+    this.mode = 'foot';
+    this.shield = 0; this.maxShield = 0;
+    this.weapon = this.prevWeapon || 'escuadra';
+
+    this.setTexture('ita_idle0');
+    this.setScale(ITA_SCALE);
+    this.body.setSize(14, 45);
+    this.body.setOffset(10, 4);
+    this.play('ita-idle');
+
+    this.invuln = true;
+    this.scene.time.delayedCall(1100, () => { this.invuln = false; });
+    this.scene.tweens.add({
+      targets: this, alpha: 0.3, yoyo: true, repeat: 7, duration: 70,
+      onComplete: () => this.setAlpha(1),
+    });
+    if (!silent) {
+      this.scene.boom(this.x, this.y, 1.7);
+      this.scene.banner('¡EL TANQUE EXPLOTÓ!', '#ff6666');
+    }
   }
 
   update(time) {
     if (!this.active) return;
+    if (this.mode === 'tank') return this.updateTank(time);
     const scene = this.scene;
 
     let vx = 0;
@@ -70,6 +127,35 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     if (scene.btnGrenadeJust()) this.throwGrenade();
   }
 
+  // Movimiento del tanque: más lento, salto cortito, orugas que ruedan.
+  updateTank(time) {
+    const scene = this.scene;
+    let vx = 0;
+    if (scene.btnLeft())  { vx = -CONST.PLAYER_SPEED * 0.7; this.dir = -1; }
+    else if (scene.btnRight()) { vx = CONST.PLAYER_SPEED * 0.7; this.dir = 1; }
+    this.setVelocityX(vx);
+    this.setFlipX(this.dir < 0);
+
+    const onGround = this.body.blocked.down || this.body.touching.down;
+    if (scene.btnJumpJust() && onGround) {
+      this.setVelocityY(-CONST.PLAYER_JUMP * 0.6);
+      SFX.play('jump');
+    }
+
+    // Orugas: ruedan al moverse, quietas al parar.
+    if (!this.anims.isPlaying) this.anims.play('tank-roll', true);
+    if (vx === 0) this.anims.pause();
+    else if (this.anims.isPaused) this.anims.resume();
+
+    if (onGround && vx !== 0 && time > this.runDustAt) {
+      this.runDustAt = time + 160;
+      scene.spawnDust(this.x - this.dir * 30, this.y + 52, 2);
+    }
+
+    if (scene.btnShoot()) this.tryShoot(time);
+    if (scene.btnGrenadeJust()) this.throwGrenade();
+  }
+
   stretch() {
     this.scene.tweens.add({ targets: this, scaleY: ITA_SCALE * 1.12, scaleX: ITA_SCALE * 0.92, duration: 120, yoyo: true });
   }
@@ -88,8 +174,9 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     const dir = this.dir;
-    const gx = this.x + dir * 34;
-    const gy = this.y - 6;
+    const tank = this.mode === 'tank';
+    const gx = this.x + dir * (tank ? 78 : 34);
+    const gy = this.y - (tank ? 4 : 6);
 
     for (let i = 0; i < wpn.pellets; i++) {
       const spread = wpn.spread ? Phaser.Math.FloatBetween(-wpn.spread, wpn.spread) : 0;
@@ -97,13 +184,15 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       this.scene.spawnPlayerBullet(gx, gy, Math.cos(ang) * wpn.speed, Math.sin(ang) * wpn.speed, wpn);
     }
 
-    if (this.weapon !== 'escuadra') {
+    // El cañón es ilimitado; las demás armas (salvo escuadra) gastan munición.
+    if (this.weapon !== 'escuadra' && this.weapon !== 'canon') {
       this.ammo[this.weapon] -= 1;
       if (this.ammo[this.weapon] <= 0) this.weapon = 'escuadra';
     }
 
     this.scene.muzzle(gx, gy, dir, wpn.color);
-    this.scene.spawnCasing(this.x + dir * 4, gy, -dir);
+    if (!tank) this.scene.spawnCasing(this.x + dir * 4, gy, -dir);
+    if (tank) this.scene.cameras.main.shake(120, 0.006);
     SFX.play(wpn.explosive ? 'shoot_big' : 'shoot');
   }
 
@@ -117,6 +206,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
   giveWeapon(type) {
     if (!WEAPONS[type] || type === 'escuadra') return;
     this.ammo[type] = (this.ammo[type] || 0) + WEAPONS[type].ammo;
+    // En el tanque guardamos el arma para cuando bajemos; no soltamos el cañón.
+    if (this.mode === 'tank') { this.prevWeapon = type; return; }
     this.weapon = type;
   }
 
@@ -124,6 +215,18 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
   takeHit(dmg) {
     if (this.invuln || !this.active) return;
+
+    // En el tanque el daño lo absorbe el blindaje; al agotarse, Ita sale a pie.
+    if (this.mode === 'tank') {
+      this.shield -= dmg;
+      SFX.play('hurt');
+      this.setTintFill(0xffffff);
+      this.scene.time.delayedCall(60, () => { if (this.active) this.clearTint(); });
+      this.scene.cameras.main.shake(120, 0.006);
+      if (this.shield <= 0) this.exitTank(false);
+      return;
+    }
+
     this.hp -= dmg;
     SFX.play('hurt');
     if (this.hp <= 0) { this.hp = 0; this.scene.playerDied(); return; }

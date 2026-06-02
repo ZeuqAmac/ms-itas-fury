@@ -45,10 +45,41 @@ const WEAPONS = {
     name: 'Bazuca', dmg: 140, cooldown: 950, speed: 600,
     pellets: 1, spread: 0, ammo: 10, color: 0xffffff, size: 2, explosive: true,
   },
+  // Cañón del tanque (solo se usa al ir montado en el tanque)
+  canon: {
+    name: 'Cañón del Tanque', dmg: 120, cooldown: 600, speed: 700,
+    pellets: 1, spread: 0, ammo: Infinity, color: 0xffe9a0, size: 3, explosive: true,
+  },
 };
 
 // Orden de "poder" para decidir si un pickup mejora el arma actual
 const WEAPON_ORDER = ['escuadra', 'cuerno', 'escopeta', 'bazuca'];
+
+// --- Personajes seleccionables ---
+// locked: aún no jugable (placeholder para futuros personajes).
+// vehicle: true => arranca el nivel montado en el tanque.
+const CHARACTERS = [
+  {
+    id: 'ita', name: 'ITA ITA', tag: 'La Reina de Sinaloa',
+    desc: 'Ágil y letal. Domina el cuerno de chivo y la granada piña.',
+    sprite: 'ita_idle0', anim: 'ita-idle', scale: 5.4, locked: false,
+  },
+  {
+    id: 'tanque', name: 'EL TANQUE', tag: 'Blindado "El Slug"',
+    desc: 'Blindaje pesado y cañonazos demoledores. Rudo pero lento.',
+    sprite: 'tank_body0', anim: 'tank-roll', scale: 3.0, vehicle: true, locked: false,
+  },
+  {
+    id: 'lucky', name: 'LUCKY', tag: 'Perro artillero',
+    desc: 'Próximamente jugable. Por ahora te acompaña en el nivel.',
+    sprite: 'lucky_idle0', anim: 'lucky-idle', scale: 4.6, locked: true,
+  },
+  {
+    id: 'misterio', name: '¿?', tag: 'Próximamente',
+    desc: 'Nuevo personaje en camino. ¡Aguanta vara!',
+    sprite: null, scale: 4, locked: true,
+  },
+];
 
 // --- Niveles ---
 // enemies: {x} posición de spawn en el suelo
@@ -90,6 +121,7 @@ const LEVELS = [
       { x: 3700, type: 'escopeta' },
       { x: 4560, y: 260, type: 'cuerno' },    // plataforma alta
       { x: 5000, type: 'vida' },
+      { x: 3650, type: 'tanque' },            // ¡sube al tanque!
       { x: 5700, type: 'bazuca' },
     ],
   },
@@ -132,6 +164,7 @@ const LEVELS = [
       { x: 4000, type: 'escopeta' },
       { x: 4780, y: 274, type: 'cuerno' },
       { x: 5500, type: 'vida' },
+      { x: 4250, type: 'tanque' },            // ¡sube al tanque!
       { x: 6250, y: 284, type: 'bazuca' },
     ],
   },
@@ -141,4 +174,5 @@ window.CONST = CONST;
 window.COLORS = COLORS;
 window.WEAPONS = WEAPONS;
 window.WEAPON_ORDER = WEAPON_ORDER;
+window.CHARACTERS = CHARACTERS;
 window.LEVELS = LEVELS;

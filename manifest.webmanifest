@@ -1,0 +1,21 @@
+{
+  "name": "MS Ita's Fury — Metal Slug Sinaloense",
+  "short_name": "Ita's Fury",
+  "description": "Run-and-gun estilo Metal Slug ambientado en Sinaloa. Juega como Ita Ita, sube al tanque y limpia las calles de chairos.",
+  "id": "/",
+  "start_url": "./?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#0b0b0f",
+  "theme_color": "#6e1423",
+  "lang": "es",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
