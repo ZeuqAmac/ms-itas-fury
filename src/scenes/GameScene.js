@@ -752,6 +752,11 @@ class GameScene extends Phaser.Scene {
       fontFamily: 'Trebuchet MS', fontSize: '22px', color: '#ffffff',
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(3000).setInteractive({ useHandCursor: true });
     this.muteBtn.on('pointerdown', () => this.toggleMute());
+
+    // Indicador de control: brilla cuando el navegador detecta un gamepad.
+    this.hudPad = this.add.text(CONST.WIDTH - 46, 60, '🎮', {
+      fontFamily: 'Trebuchet MS', fontSize: '18px', color: '#ffffff',
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(3000).setAlpha(0.22);
   }
 
   toggleMute() {
@@ -809,6 +814,12 @@ class GameScene extends Phaser.Scene {
       this.hudBoss.setText(this.bossCfg.name).setVisible(true);
     } else {
       this.hudBoss.setVisible(false);
+    }
+
+    // indicador de gamepad (brilla si el navegador ve un control)
+    if (this.hudPad) {
+      const on = this.input.gamepad && this.input.gamepad.total > 0;
+      this.hudPad.setAlpha(on ? 1 : 0.22);
     }
   }
 
