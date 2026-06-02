@@ -28,8 +28,9 @@ las imágenes originales solo se usan como póster en menús.
 index.html              Carga Phaser (CDN) + scripts en orden
 src/main.js             Config de Phaser + GAME_STATE global (level, lives, score)
 src/data/config.js      CONST, COLORS, WEAPONS, LEVELS (con theme), paleta
-src/art/CharacterArt.js Sprites pixel-art por código (Ita, Lucky, Chairo) + anims
-src/art/SceneryArt.js   Capas de fondo (cielo, catedral, mercado, palmeras...) + parallax
+src/art/CharacterArt.js Sprites pixel-art por código (Ita, Choco, Lucky, Chairo) + anims
+src/art/SceneryArt.js   Capas de fondo (catedral, mercado, malecón/faro...) + parallax
+src/art/PickupArt.js    Cajas de pertrechos pixel-art (una por arma/ítem)
 src/entities/Player.js  Ita: movimiento, salto, disparo, armas, polvo, casquillos
 src/entities/Chairo.js  Enemigo: IA (camina/dispara), animación de muerte
 src/entities/Lucky.js   Compañero: flota, auto-dispara al enemigo más cercano
@@ -60,10 +61,16 @@ assets/                 Imágenes originales (Ita Ita.png, Lucky.png) + recortes
   'lucky' | 'tanque'), `gaps`, `hazards`, `platforms`, `boss`, `width`.
 
 ## Controles
-Mover ← → / A D · Saltar ↑ / W / Espacio · Disparar J / Z · Granada K · Pausa P · Silencio M
+Mover ← → / A D · Saltar W / Espacio · Disparar J / Z · Granada K · Pausa P · Silencio M
+- **Apuntar:** ↑ ↓ (combinadas con izq/der dan diagonales). Las balas salen en
+  la dirección apuntada (8 vías, estilo Metal Slug). El tanque dispara fijo.
 - **Cuchillazo:** mismo botón de tiro cuando el enemigo está pegado (auto).
-- **Móvil:** **joystick** analógico (abajo-izq.) para moverse + botones TIRO,
-  SALTO y 💣 a la derecha. En escritorio se fuerzan con `?touch=1` en la URL.
+- **Móvil:** **joystick** analógico (abajo-izq.) — mover izq/der y **apuntar**
+  empujándolo arriba/abajo — + botones TIRO, SALTO y 💣 a la derecha.
+  En escritorio se fuerzan con `?touch=1` en la URL.
+- **Gamepad** (GameSir X2 y mandos estándar): stick/cruceta mueve y apunta,
+  **A** salta, **X/RB/RT/B** dispara, **Y/LB** granada, **Start** pausa,
+  **Back** silencio. (`GameScene.setupGamepad`; Phaser `input.gamepad`.)
 
 ## Armas (config.js → WEAPONS)
 Escuadra (∞), Cuerno de Chivo, Escopeta Recortada, Bazuca (explosiva).
@@ -181,6 +188,23 @@ Al acabar munición vuelve a Escuadra.
     nuevos. Suelo arenoso (`ground_malecon`). Layout con **muchas plataformas a
     distintas alturas** (repisas bajas al ras del agua y miradores altos sobre el
     faro) y más canales de mar para brincar.
+
+## ✅ Hecho (séptima iteración 2026-06-02)
+31. **Soporte de gamepad** (GameSir X2 y mandos estándar): Phaser `input.gamepad`
+    habilitado en `main.js`. `GameScene.setupGamepad` lee stick/cruceta para
+    mover+apuntar y mapea A=salto, X/RB/RT/B=tiro, Y/LB=granada, Start=pausa,
+    Back=silencio (botones discretos reusan los flags one-shot del táctil).
+    Menús y selección de personaje también responden al control.
+32. **Disparo direccional (8 vías)**: `Player.aimAngle()` calcula el ángulo de
+    tiro según stick/cruceta (↑ dispara arriba; ↑+→ diagonal; abajo sólo en el
+    aire). `tryShoot` usa el ángulo para balas, fogonazo y casquillos. El stick
+    táctil ahora también apunta (`touch.up/down` desde el joystick). El tanque
+    mantiene el cañón fijo (horizontal).
+33. **Cajas de armas con diseño** (`src/art/PickupArt.js`): cada pickup es una
+    caja de pertrechos de madera con marco metálico, franja de color por arma e
+    **icono del arma/ítem** (AK, escopeta, RPG, botiquín+cruz, hueso de Lucky,
+    tanque). Reemplaza la caja genérica con letra. `spawnPickup` usa
+    `pickup_<tipo>` + resplandor de color que pulsa.
 
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).

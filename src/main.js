@@ -14,8 +14,8 @@ const config = {
     width: CONST.WIDTH,
     height: CONST.HEIGHT,
   },
-  // Multi-touch (mover + disparar al mismo tiempo en móvil)
-  input: { activePointers: 3 },
+  // Multi-touch (mover + disparar al mismo tiempo en móvil) + gamepad
+  input: { activePointers: 3, gamepad: true },
   physics: {
     default: 'arcade',
     arcade: {

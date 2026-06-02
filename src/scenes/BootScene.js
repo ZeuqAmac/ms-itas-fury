@@ -16,9 +16,10 @@ class BootScene extends Phaser.Scene {
     this.genGrenade();
     this.genPlatform();
 
-    // Sprites pixel-art + fondos
+    // Sprites pixel-art + fondos + cajas de pertrechos
     CharacterArt.build(this);
     SceneryArt.build(this);
+    PickupArt.build(this);
 
     this.scene.start('MenuScene');
   }
