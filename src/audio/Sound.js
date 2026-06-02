@@ -105,6 +105,9 @@ const SFX = {
       case 'slash':
         this._sweep(1700, 480, t, 0.08, 'square', 0.12);
         this._noiseHit(0.07, 5200, 800, 0.18); break;
+      case 'roll':
+        this._sweep(680, 200, t, 0.2, 'sawtooth', 0.12);
+        this._noiseHit(0.18, 1300, 280, 0.16); break;
       case 'cannon':
         this._sweep(360, 80, t, 0.3, 'sawtooth', 0.34);
         this._noiseHit(0.32, 1800, 220, 0.55);

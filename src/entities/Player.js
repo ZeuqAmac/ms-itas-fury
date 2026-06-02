@@ -36,6 +36,12 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.wasOnGround = true;
     this.runDustAt = 0;
 
+    // --- Esquive (rodada con i-frames) ---
+    this.dodging = false;
+    this.dodgeEnd = 0;
+    this.dodgeReadyAt = 0;
+    this._downPrev = false;
+
     // --- Vehículo (tanque) ---
     this.mode = 'foot';          // 'foot' | 'tank'
     this.shield = 0;             // blindaje del tanque
@@ -97,6 +103,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
   update(time) {
     if (!this.active) return;
     if (this.mode === 'tank') return this.updateTank(time);
+    if (this.dodging) return this.updateDodge(time);
     const scene = this.scene;
 
     let vx = 0;
@@ -130,12 +137,53 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
     this.wasOnGround = onGround;
 
+    // Esquivar: al presionar ABAJO en el piso, el personaje rueda con
+    // invulnerabilidad breve (en el aire, abajo apunta hacia abajo).
+    const down = scene.aimDown();
+    const dodgeJust = down && !this._downPrev;
+    this._downPrev = down;
+    if (onGround && dodgeJust && time >= this.dodgeReadyAt) {
+      return this.startDodge(time);
+    }
+
     // Botón de tiro: si hay un enemigo a quemarropa, da un cuchillazo
     // (estilo Metal Slug); si no, dispara el arma equipada.
     if (scene.btnShoot()) {
       if (!this.tryMelee(time)) this.tryShoot(time);
     }
     if (scene.btnGrenadeJust()) this.throwGrenade();
+  }
+
+  // Inicia la rodada de esquive (i-frames + impulso horizontal + giro).
+  startDodge(time) {
+    this.dodging = true;
+    this.dodgeEnd = time + 340;
+    this.dodgeReadyAt = time + 340 + 380;     // cooldown tras esquivar
+    this.invuln = true;
+    this.setVelocityX(this.dir * 440);
+    this.anims.play(this.skin + '-run', true);
+    this.scene.spawnDust(this.x - this.dir * 14, this.y + 52, 4);
+    this.scene.dodgeFx(this);
+    // barrel roll
+    this.scene.tweens.add({
+      targets: this, rotation: this.dir * Math.PI * 2, duration: 340,
+      onComplete: () => this.setRotation(0),
+    });
+    SFX.play('roll');
+  }
+
+  // Mantiene el impulso de la rodada hasta que termina.
+  updateDodge(time) {
+    this.setVelocityX(this.dir * 440);
+    this.setFlipX(this.dir < 0);
+    if (time >= this.dodgeEnd) {
+      this.dodging = false;
+      this.setRotation(0);
+      // breve gracia al salir de la rodada
+      this.scene.time.delayedCall(140, () => {
+        if (this.active && !this.dodging) this.invuln = false;
+      });
+    }
   }
 
   // Movimiento del tanque: más lento, salto cortito, orugas que ruedan.
