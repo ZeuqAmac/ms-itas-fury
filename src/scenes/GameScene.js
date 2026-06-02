@@ -97,22 +97,67 @@ class GameScene extends Phaser.Scene {
     this.wasd = this.input.keyboard.addKeys('W,A,S,D,J,K,Z,SPACE');
     this.input.keyboard.on('keydown-P', () => this.togglePause());
     this.input.keyboard.on('keydown-M', () => this.toggleMute());
-    this.touch = { left: false, right: false, shoot: false, jump: false, grenade: false };
+    this.touch = { left: false, right: false, up: false, down: false, shoot: false, jump: false, grenade: false };
     this.buildTouchControls();
+    this.setupGamepad();
 
     // --- HUD ---
     this.buildHUD();
     this.banner('¡VÁMONOS RECIO!', '#ffd24a');
   }
 
-  // ---------- Helpers de input (teclado + táctil) ----------
-  btnLeft()  { return this.cursors.left.isDown || this.wasd.A.isDown || this.touch.left; }
-  btnRight() { return this.cursors.right.isDown || this.wasd.D.isDown || this.touch.right; }
-  btnShoot() { return this.wasd.J.isDown || this.wasd.Z.isDown || this.touch.shoot; }
+  // ---------- Gamepad (GameSir X2 y mandos estándar) ----------
+  setupGamepad() {
+    this.pad = null;
+    const gp = this.input.gamepad;
+    if (!gp) return;
+    // toma el primer mando ya conectado o el que se conecte
+    if (gp.total && gp.getPad(0)) this.pad = gp.getPad(0);
+    gp.on('connected', (pad) => { this.pad = pad; this.banner('🎮 ¡CONTROL LISTO!', '#9fe9ff'); });
+    // Botones discretos => reusan los flags de un solo disparo del táctil.
+    // Mapa estándar: 0=A 1=B 2=X 3=Y 4=LB 5=RB 8=Back 9=Start 12-15=Dpad.
+    gp.on('down', (pad, button, index) => {
+      if (index === 0) this.touch.jump = true;            // A = salto
+      else if (index === 3 || index === 4) this.touch.grenade = true;  // Y / LB = granada
+      else if (index === 9) this.togglePause();           // Start = pausa
+      else if (index === 8) this.toggleMute();            // Back = silencio
+    });
+  }
+
+  // ---------- Helpers de input (teclado + táctil + gamepad) ----------
+  // componente del stick izquierdo con guarda (algunos mandos no lo exponen)
+  _stickX(p) { return (p && p.leftStick) ? p.leftStick.x : 0; }
+  _stickY(p) { return (p && p.leftStick) ? p.leftStick.y : 0; }
+
+  btnLeft() {
+    const p = this.pad;
+    return this.cursors.left.isDown || this.wasd.A.isDown || this.touch.left
+        || (p && (p.left || this._stickX(p) < -0.45));
+  }
+  btnRight() {
+    const p = this.pad;
+    return this.cursors.right.isDown || this.wasd.D.isDown || this.touch.right
+        || (p && (p.right || this._stickX(p) > 0.45));
+  }
+  // Apuntado vertical (combina con izq/der para diagonales, estilo Metal Slug)
+  aimUp() {
+    const p = this.pad;
+    return this.cursors.up.isDown || this.touch.up
+        || (p && (p.up || this._stickY(p) < -0.5));
+  }
+  aimDown() {
+    const p = this.pad;
+    return this.cursors.down.isDown || this.touch.down
+        || (p && (p.down || this._stickY(p) > 0.5));
+  }
+  btnShoot() {
+    const p = this.pad;
+    return this.wasd.J.isDown || this.wasd.Z.isDown || this.touch.shoot
+        || (p && (p.X || p.R1 || p.R2 > 0.3 || p.B));
+  }
   btnJumpJust() {
     if (this.touch.jump) { this.touch.jump = false; return true; }
-    return Phaser.Input.Keyboard.JustDown(this.cursors.up)
-        || Phaser.Input.Keyboard.JustDown(this.wasd.W)
+    return Phaser.Input.Keyboard.JustDown(this.wasd.W)
         || Phaser.Input.Keyboard.JustDown(this.wasd.SPACE);
   }
   btnGrenadeJust() {
@@ -152,6 +197,7 @@ class GameScene extends Phaser.Scene {
         this.joy.active = false; this.joy.pointer = null;
         this.joy.knob.setPosition(bx, by);
         this.touch.left = false; this.touch.right = false;
+        this.touch.up = false; this.touch.down = false;
       }
     };
     this.input.on('pointerup', releaseJoy);
@@ -185,9 +231,11 @@ class GameScene extends Phaser.Scene {
     const dist = Math.hypot(dx, dy) || 1;
     const cl = Math.min(dist, j.R);
     j.knob.setPosition(j.bx + (dx / dist) * cl, j.by + (dy / dist) * cl);
-    const th = j.R * 0.32;
+    const th = j.R * 0.32, tv = j.R * 0.45;
     this.touch.left = dx < -th;
     this.touch.right = dx > th;
+    this.touch.up = dy < -tv;        // empujar arriba = apuntar arriba
+    this.touch.down = dy > tv;       // empujar abajo = apuntar abajo
   }
 
   // ---------- Spawns ----------
@@ -263,27 +311,25 @@ class GameScene extends Phaser.Scene {
 
   spawnPickup(x, type, y) {
     const py = (y !== undefined) ? y : CONST.GROUND_Y - 70;
-    const c = this.pickups.create(x, py, 'crate');
+    const tex = this.textures.exists('pickup_' + type) ? 'pickup_' + type : 'crate';
+
+    // resplandor de color (código por arma) para que la caja destaque
+    const tints = {
+      cuerno: 0xff9933, escopeta: 0xff5555, bazuca: 0xffffff,
+      vida: 0x4be36a, lucky: 0xffc24a, tanque: 0x9fb45a,
+    };
+    const glow = this.add.image(x, py, 'glow').setTint(tints[type] || 0xffd24a)
+      .setDepth(5).setBlendMode(Phaser.BlendModes.ADD).setScale(2.2).setAlpha(0.45);
+
+    const c = this.pickups.create(x, py, tex);
     c.ptype = type;
     c.setDepth(6);
+    if (tex === 'crate') c.setTint(tints[type] || 0xffd24a);
+    c.glow = glow;
 
-    const styles = {
-      cuerno:   { tint: 0xff9933, letra: 'AK', col: '#3a1d00' },
-      escopeta: { tint: 0xff5555, letra: 'SG', col: '#3a0000' },
-      bazuca:   { tint: 0xdddddd, letra: 'RPG', col: '#222' },
-      vida:     { tint: 0x4be36a, letra: '+', col: '#063b12' },
-      lucky:    { tint: 0xffc24a, letra: 'LUCKY', col: '#3a2600' },
-      tanque:   { tint: 0x9fb45a, letra: 'TANQUE', col: '#1d2608' },
-    };
-    const st = styles[type] || { tint: 0xffffff, letra: '?', col: '#000' };
-    c.setTint(st.tint);
-    const fs = st.letra.length > 3 ? '11px' : (st.letra.length > 2 ? '13px' : '18px');
-    c.label = this.add.text(x, py, st.letra, {
-      fontFamily: 'Trebuchet MS', fontStyle: 'bold', fontSize: fs, color: st.col,
-    }).setOrigin(0.5).setDepth(7);
-
-    // flotación
-    this.tweens.add({ targets: [c, c.label], y: '-=8', yoyo: true, repeat: -1, duration: 700, ease: 'Sine.inOut' });
+    // flotación + pulso del resplandor
+    this.tweens.add({ targets: [c, glow], y: py - 8, yoyo: true, repeat: -1, duration: 700, ease: 'Sine.inOut' });
+    this.tweens.add({ targets: glow, alpha: 0.2, scale: 2.7, yoyo: true, repeat: -1, duration: 900 });
     return c;
   }
 
@@ -515,7 +561,7 @@ class GameScene extends Phaser.Scene {
       this.floatText(crate.x, crate.y, '¡' + WEAPONS[type].name.toUpperCase() + '!', '#ff9933');
       SFX.play('powerup');
     }
-    if (crate.label) crate.label.destroy();
+    if (crate.glow) crate.glow.destroy();
     crate.destroy();
   }
 

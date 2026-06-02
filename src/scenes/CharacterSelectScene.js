@@ -111,6 +111,15 @@ class CharacterSelectScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-ENTER', () => this.startGame());
     this.input.keyboard.on('keydown-SPACE', () => this.startGame());
 
+    // --- Gamepad: cruceta para elegir, A/Start para jugar ---
+    if (this.input.gamepad) {
+      this.input.gamepad.on('down', (pad, button, index) => {
+        if (index === 14) this.move(-1);             // dpad izquierda
+        else if (index === 15) this.move(1);         // dpad derecha
+        else if (index === 0 || index === 9) this.startGame();  // A / Start
+      });
+    }
+
     this.select(this.selIndex);
   }
 

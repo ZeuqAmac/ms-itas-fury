@@ -106,6 +106,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.setFlipX(this.dir < 0);
 
     const onGround = this.body.blocked.down || this.body.touching.down;
+    this.onGround = onGround;
     if (scene.btnJumpJust() && onGround) {
       this.setVelocityY(-CONST.PLAYER_JUMP);
       this.stretch();
@@ -147,6 +148,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.setFlipX(this.dir < 0);
 
     const onGround = this.body.blocked.down || this.body.touching.down;
+    this.onGround = onGround;
     if (scene.btnJumpJust() && onGround) {
       this.setVelocityY(-CONST.PLAYER_JUMP * 0.6);
       SFX.play('jump');
@@ -174,6 +176,21 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.scene.tweens.add({ targets: this, scaleY: ITA_SCALE * 0.85, scaleX: ITA_SCALE * 1.12, duration: 90, yoyo: true });
   }
 
+  // Ángulo de disparo (8 direcciones) según stick/cruceta. A pie se puede
+  // apuntar arriba, en diagonal y abajo (en el aire). En el tanque el cañón
+  // es fijo y horizontal.
+  aimAngle() {
+    const dir = this.dir;
+    if (this.mode === 'tank') return dir > 0 ? 0 : Math.PI;
+    const sc = this.scene;
+    const ax = sc.btnRight() ? 1 : sc.btnLeft() ? -1 : 0;
+    const ay = sc.aimUp() ? -1 : sc.aimDown() ? 1 : 0;
+    if (ay === 0) return dir > 0 ? 0 : Math.PI;                 // horizontal
+    if (ay > 0 && this.onGround) return dir > 0 ? 0 : Math.PI;  // no dispares al piso
+    if (ax === 0) return ay < 0 ? -Math.PI / 2 : Math.PI / 2;   // recto arriba/abajo
+    return Math.atan2(ay, ax);                                  // diagonal
+  }
+
   tryShoot(time) {
     let wpn = WEAPONS[this.weapon];
     if (time < this.lastShot + wpn.cooldown) return;
@@ -184,14 +201,16 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       wpn = WEAPONS[this.weapon];
     }
 
-    const dir = this.dir;
     const tank = this.mode === 'tank';
-    const gx = this.x + dir * (tank ? 78 : 34);
-    const gy = this.y - (tank ? 4 : 6);
+    const ang0 = this.aimAngle();
+    const reach = tank ? 78 : 30;
+    const baseY = this.y - (tank ? 4 : 6);
+    const gx = this.x + Math.cos(ang0) * reach;
+    const gy = baseY + Math.sin(ang0) * reach;
 
     for (let i = 0; i < wpn.pellets; i++) {
       const spread = wpn.spread ? Phaser.Math.FloatBetween(-wpn.spread, wpn.spread) : 0;
-      const ang = (dir > 0 ? 0 : Math.PI) + spread;
+      const ang = ang0 + spread;
       this.scene.spawnPlayerBullet(gx, gy, Math.cos(ang) * wpn.speed, Math.sin(ang) * wpn.speed, wpn);
     }
 
@@ -201,8 +220,9 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       if (this.ammo[this.weapon] <= 0) this.weapon = 'escuadra';
     }
 
-    this.scene.muzzle(gx, gy, dir, wpn.color);
-    if (!tank) this.scene.spawnCasing(this.x + dir * 4, gy, -dir);
+    const fdir = Math.cos(ang0) >= 0 ? 1 : -1;
+    this.scene.muzzle(gx, gy, fdir, wpn.color);
+    if (!tank) this.scene.spawnCasing(this.x + this.dir * 4, baseY, -this.dir);
     if (tank) this.scene.cameras.main.shake(120, 0.006);
     SFX.play(wpn.explosive ? 'shoot_big' : 'shoot');
   }

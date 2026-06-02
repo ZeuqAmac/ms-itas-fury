@@ -40,6 +40,7 @@ class EndScene extends Phaser.Scene {
     this.input.keyboard.once('keydown-ENTER', go);
     this.input.keyboard.once('keydown-SPACE', go);
     this.input.once('pointerdown', go);
+    if (this.input.gamepad) this.input.gamepad.once('down', go);
   }
 }
 

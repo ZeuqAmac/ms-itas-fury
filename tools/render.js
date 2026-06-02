@@ -135,11 +135,12 @@ sandbox.document = {
   },
 };
 vm.createContext(sandbox);
-for (const f of ['src/data/config.js', 'src/art/Pixel.js', 'src/art/CharacterArt.js', 'src/art/SceneryArt.js']) {
+for (const f of ['src/data/config.js', 'src/art/Pixel.js', 'src/art/CharacterArt.js', 'src/art/SceneryArt.js', 'src/art/PickupArt.js']) {
   vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), sandbox, { filename: f });
 }
 try { sandbox.CharacterArt.build(fakeScene); } catch (e) { console.error('char', e.message); }
 try { sandbox.SceneryArt.build(fakeScene); } catch (e) { console.error('scenery', e.message); }
+try { sandbox.PickupArt.build(fakeScene); } catch (e) { console.error('pickup', e.message); }
 
 // ---- Exporta sprites a una hoja por personaje ----
 const want = process.argv.slice(2);
