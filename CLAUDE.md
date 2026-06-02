@@ -65,6 +65,8 @@ Mover ← → / A D · Saltar W / Espacio · Disparar J / Z · Granada K · Paus
 - **Apuntar:** ↑ ↓ (combinadas con izq/der dan diagonales). Las balas salen en
   la dirección apuntada (8 vías, estilo Metal Slug). El tanque dispara fijo.
 - **Cuchillazo:** mismo botón de tiro cuando el enemigo está pegado (auto).
+- **Esquivar (rodada):** ↓ / stick-abajo **en el piso** => rueda con i-frames
+  (en el aire, ↓ apunta hacia abajo). Tiene cooldown. (`Player.startDodge`.)
 - **Móvil:** **joystick** analógico (abajo-izq.) — mover izq/der y **apuntar**
   empujándolo arriba/abajo — + botones TIRO, SALTO y 💣 a la derecha.
   En escritorio se fuerzan con `?touch=1` en la URL.
@@ -205,6 +207,13 @@ Al acabar munición vuelve a Escuadra.
     **icono del arma/ítem** (AK, escopeta, RPG, botiquín+cruz, hueso de Lucky,
     tanque). Reemplaza la caja genérica con letra. `spawnPickup` usa
     `pickup_<tipo>` + resplandor de color que pulsa.
+
+## ✅ Hecho (octava iteración 2026-06-02)
+34. **Esquive (rodada con i-frames)**: presionar **abajo en el piso** ejecuta
+    una rodada — impulso horizontal, giro (barrel roll), estela fantasma
+    (`GameScene.dodgeFx`), polvo y sonido `roll` — con **invulnerabilidad**
+    durante el movimiento y un cooldown corto. En el aire, abajo sigue apuntando
+    hacia abajo. (`Player.startDodge` / `updateDodge`; disparador en `update`.)
 
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).

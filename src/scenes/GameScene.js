@@ -470,6 +470,19 @@ class GameScene extends Phaser.Scene {
     }
   }
 
+  // Estela fantasma al esquivar (rodada)
+  dodgeFx(pl) {
+    this.time.addEvent({
+      delay: 55, repeat: 4, callback: () => {
+        if (!pl.active) return;
+        const g = this.add.image(pl.x, pl.y, pl.texture.key)
+          .setScale(pl.scaleX, pl.scaleY).setFlipX(pl.flipX).setRotation(pl.rotation)
+          .setAlpha(0.5).setTint(0x9fe9ff).setDepth(9).setBlendMode(Phaser.BlendModes.ADD);
+        this.tweens.add({ targets: g, alpha: 0, duration: 240, onComplete: () => g.destroy() });
+      },
+    });
+  }
+
   spawnCasing(x, y, dir) {
     const c = this.physics.add.image(x, y, 'casing').setDepth(5).setTint(0xe9c45a);
     c.setVelocity(dir * Phaser.Math.Between(60, 120), -Phaser.Math.Between(180, 260));
