@@ -25,7 +25,7 @@ const CharacterArt = {
   // -------------------------------------------------------
   _buildIta(scene) {
     const W = 34, H = 50;
-    ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump'].forEach(fr => {
+    ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'up', 'updiag'].forEach(fr => {
       this._sprite(scene, 'ita_' + fr, W, H, p => this._drawIta(p, fr));
     });
   },
@@ -101,13 +101,31 @@ const CharacterArt = {
     p(hair, 23, 14 + oy, 4, 13); p(hairHi, 24, 16 + oy, 1, 8);  // mechón sobre el hombro
 
     // --- brazo delantero (guante) + cuerno de chivo (AK) ---
-    p(skin, 19, 17 + oy, 4, 5); p(skin, 21, 20 + oy, 6, 3);
-    p(glove, 26, 20 + oy, 5, 3); p(0x2a2a2a, 26, 20 + oy, 5, 1);
-    p(wood, 16, 22 + oy, 5, 4);                      // culata de madera
-    p(gun, 20, 21 + oy, 3, 6);                       // cajón
-    p(gun, 21, 22 + oy, 13, 2); p(gunHi, 21, 22 + oy, 13, 1);   // cañón
-    p(mag, 22, 24 + oy, 4, 5); p(mag, 24, 28 + oy, 3, 3);       // cargador curvo
-    p(gun, 32, 21 + oy, 2, 2);                       // alza
+    if (fr === 'up') {
+      // apuntar recto hacia arriba (AK vertical, a la derecha de la cabeza)
+      p(skin, 18, 17 + oy, 4, 6); p(skin, 20, 12 + oy, 4, 6); p(glove, 22, 9 + oy, 5, 4);
+      p(wood, 23, 20 + oy, 4, 6);                     // culata
+      p(gun, 23, 16 + oy, 5, 6);                      // cajón
+      p(mag, 19, 18 + oy, 4, 5); p(mag, 17, 21 + oy, 3, 3);   // cargador curvo
+      p(gun, 24, 0 + oy, 3, 18); p(gunHi, 24, 0 + oy, 1, 18); // cañón vertical
+      p(gun, 22, 8 + oy, 2, 2);                       // alza
+    } else if (fr === 'updiag') {
+      // apuntar en diagonal hacia arriba-adelante
+      p(skin, 19, 17 + oy, 4, 4); p(skin, 22, 14 + oy, 4, 4); p(glove, 25, 11 + oy, 5, 4);
+      p(wood, 16, 23 + oy, 4, 4);                     // culata abajo-izq
+      for (let i = 0; i < 12; i++) p(gun, 20 + i, 21 + oy - i, 3, 3);    // cañón diagonal
+      for (let i = 0; i < 12; i++) p(gunHi, 20 + i, 21 + oy - i, 1, 1);
+      p(mag, 20, 24 + oy, 4, 4); p(mag, 21, 27 + oy, 3, 3);              // cargador
+      p(gun, 31, 9 + oy, 3, 3);                       // boca
+    } else {
+      p(skin, 19, 17 + oy, 4, 5); p(skin, 21, 20 + oy, 6, 3);
+      p(glove, 26, 20 + oy, 5, 3); p(0x2a2a2a, 26, 20 + oy, 5, 1);
+      p(wood, 16, 22 + oy, 5, 4);                      // culata de madera
+      p(gun, 20, 21 + oy, 3, 6);                       // cajón
+      p(gun, 21, 22 + oy, 13, 2); p(gunHi, 21, 22 + oy, 13, 1);   // cañón
+      p(mag, 22, 24 + oy, 4, 5); p(mag, 24, 28 + oy, 3, 3);       // cargador curvo
+      p(gun, 32, 21 + oy, 2, 2);                       // alza
+    }
   },
 
   // -------------------------------------------------------
@@ -116,7 +134,7 @@ const CharacterArt = {
   // -------------------------------------------------------
   _buildChoco(scene) {
     const W = 34, H = 50;
-    ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump'].forEach(fr => {
+    ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'up', 'updiag'].forEach(fr => {
       this._sprite(scene, 'choco_' + fr, W, H, p => this._drawChoco(p, fr));
     });
   },
@@ -190,12 +208,29 @@ const CharacterArt = {
     p(hair, 24, 14 + oy, 4, 14); p(hairHi, 25, 16 + oy, 1, 9);  // mechón sobre el hombro
 
     // --- brazo delantero (guante) + subfusil ---
-    p(skin, 19, 17 + oy, 4, 5); p(skin, 21, 20 + oy, 6, 3);
-    p(glove, 26, 20 + oy, 5, 3); p(0x2a2a2a, 26, 20 + oy, 5, 1);
-    p(gun, 20, 21 + oy, 4, 6);                       // cajón
-    p(gun, 22, 22 + oy, 11, 2); p(gunHi, 22, 22 + oy, 11, 1);   // cañón corto
-    p(mag, 22, 24 + oy, 3, 5);                        // cargador recto
-    p(gun, 31, 21 + oy, 2, 2);                        // alza
+    if (fr === 'up') {
+      // apuntar recto hacia arriba (subfusil vertical)
+      p(skin, 18, 17 + oy, 4, 6); p(skin, 20, 12 + oy, 4, 6); p(glove, 22, 9 + oy, 5, 4);
+      p(gun, 23, 16 + oy, 5, 8);                       // cuerpo
+      p(mag, 19, 19 + oy, 4, 6);                       // cargador recto
+      p(gun, 24, 2 + oy, 3, 15); p(gunHi, 24, 2 + oy, 1, 15);   // cañón corto
+      p(gun, 24, 0 + oy, 3, 2);                        // boca
+    } else if (fr === 'updiag') {
+      // apuntar en diagonal hacia arriba-adelante
+      p(skin, 19, 17 + oy, 4, 4); p(skin, 22, 14 + oy, 4, 4); p(glove, 25, 11 + oy, 5, 4);
+      p(gun, 19, 22 + oy, 4, 5);                       // cajón
+      for (let i = 0; i < 9; i++) p(gun, 21 + i, 20 + oy - i, 3, 3);    // cañón diagonal
+      for (let i = 0; i < 9; i++) p(gunHi, 21 + i, 20 + oy - i, 1, 1);
+      p(mag, 21, 25 + oy, 3, 5);                       // cargador
+      p(gun, 29, 11 + oy, 3, 3);                       // boca
+    } else {
+      p(skin, 19, 17 + oy, 4, 5); p(skin, 21, 20 + oy, 6, 3);
+      p(glove, 26, 20 + oy, 5, 3); p(0x2a2a2a, 26, 20 + oy, 5, 1);
+      p(gun, 20, 21 + oy, 4, 6);                       // cajón
+      p(gun, 22, 22 + oy, 11, 2); p(gunHi, 22, 22 + oy, 11, 1);   // cañón corto
+      p(mag, 22, 24 + oy, 3, 5);                        // cargador recto
+      p(gun, 31, 21 + oy, 2, 2);                        // alza
+    }
   },
 
   // -------------------------------------------------------
@@ -415,9 +450,13 @@ const CharacterArt = {
     mk('ita-idle', ['ita_idle0', 'ita_idle1'], 3, -1);
     mk('ita-run', ['ita_run0', 'ita_run1', 'ita_run2', 'ita_run3'], 12, -1);
     mk('ita-jump', ['ita_jump'], 1, 0);
+    mk('ita-up', ['ita_up'], 1, 0);
+    mk('ita-updiag', ['ita_updiag'], 1, 0);
     mk('choco-idle', ['choco_idle0', 'choco_idle1'], 3, -1);
     mk('choco-run', ['choco_run0', 'choco_run1', 'choco_run2', 'choco_run3'], 12, -1);
     mk('choco-jump', ['choco_jump'], 1, 0);
+    mk('choco-up', ['choco_up'], 1, 0);
+    mk('choco-updiag', ['choco_updiag'], 1, 0);
     mk('lucky-idle', ['lucky_idle0', 'lucky_idle1'], 4, -1);
     mk('lucky-walk', ['lucky_walk0', 'lucky_walk1'], 9, -1);
     mk('chairo-walk', ['chairo_walk0', 'chairo_walk1', 'chairo_walk2', 'chairo_walk3'], 8, -1);
