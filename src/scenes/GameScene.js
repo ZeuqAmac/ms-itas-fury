@@ -187,18 +187,25 @@ class GameScene extends Phaser.Scene {
 
     const D = 3000, W = CONST.WIDTH, H = CONST.HEIGHT, yb = H - 72;
 
+    // Registro de objetos para poder ocultarlos cuando haya gamepad.
+    this.touchControls = [];
+    this.touchZones = [];
+    this.touchVisible = true;
+    const reg = (o) => { this.touchControls.push(o); return o; };
+
     // --- Joystick de movimiento (abajo-izquierda) ---
     const bx = 104, by = H - 86, R = 56;
-    this.add.circle(bx, by, R, 0x000000, 0.28).setScrollFactor(0).setDepth(D)
-      .setStrokeStyle(3, 0xffd24a, 0.55);
-    this.add.circle(bx, by, R * 0.42, 0xffffff, 0.06).setScrollFactor(0).setDepth(D);
-    const knob = this.add.circle(bx, by, 28, 0xffd24a, 0.6).setScrollFactor(0).setDepth(D + 1)
-      .setStrokeStyle(3, 0x6e1423, 0.9);
+    reg(this.add.circle(bx, by, R, 0x000000, 0.28).setScrollFactor(0).setDepth(D)
+      .setStrokeStyle(3, 0xffd24a, 0.55));
+    reg(this.add.circle(bx, by, R * 0.42, 0xffffff, 0.06).setScrollFactor(0).setDepth(D));
+    const knob = reg(this.add.circle(bx, by, 28, 0xffd24a, 0.6).setScrollFactor(0).setDepth(D + 1)
+      .setStrokeStyle(3, 0x6e1423, 0.9));
     this.joy = { active: false, pointer: null, bx, by, R, knob };
 
     // zona amplia (mitad inferior izquierda) para agarrar el stick donde toques
     const jzone = this.add.zone(0, H - 230, W * 0.5, 230).setOrigin(0, 0)
       .setScrollFactor(0).setDepth(D - 1).setInteractive();
+    reg(jzone); this.touchZones.push(jzone);
     jzone.on('pointerdown', (pointer) => {
       this.joy.active = true; this.joy.pointer = pointer;
       this._moveJoy(pointer);
@@ -219,12 +226,14 @@ class GameScene extends Phaser.Scene {
 
     // --- Botones de acción (derecha) ---
     const mk = (x, y, r, label, fs) => {
-      this.add.circle(x, y, r, 0x000000, 0.3).setScrollFactor(0).setDepth(D)
-        .setStrokeStyle(3, 0xffd24a, 0.7);
-      this.add.text(x, y, label, {
+      reg(this.add.circle(x, y, r, 0x000000, 0.3).setScrollFactor(0).setDepth(D)
+        .setStrokeStyle(3, 0xffd24a, 0.7));
+      reg(this.add.text(x, y, label, {
         fontFamily: 'Trebuchet MS', fontStyle: 'bold', fontSize: (fs || 18) + 'px', color: '#ffffff',
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(D + 1);
-      return this.add.zone(x, y, r * 2.1, r * 2.1).setScrollFactor(0).setDepth(D + 2).setInteractive();
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(D + 1));
+      const z = this.add.zone(x, y, r * 2.1, r * 2.1).setScrollFactor(0).setDepth(D + 2).setInteractive();
+      reg(z); this.touchZones.push(z);
+      return z;
     };
     const hold = (z, set) => {
       z.on('pointerdown', () => set(true));
@@ -236,6 +245,20 @@ class GameScene extends Phaser.Scene {
     hold(mk(W - 182, yb + 4, 52, 'TIRO', 16), v => this.touch.shoot = v);
     mk(W - 70, yb, 46, 'SALTO', 13).on('pointerdown', () => { this.touch.jump = true; });
     mk(W - 150, yb - 96, 34, '💣', 22).on('pointerdown', () => { this.touch.grenade = true; });
+  }
+
+  // Oculta/muestra los controles en pantalla (al conectar/desconectar gamepad).
+  setTouchVisible(v) {
+    if (!this.touchControls || this.touchVisible === v) return;
+    this.touchVisible = v;
+    this.touchControls.forEach(o => o.setVisible(v));
+    this.touchZones.forEach(z => { if (z.input) z.input.enabled = v; });
+    if (!v) {
+      // suelta cualquier input táctil pendiente
+      this.touch.left = this.touch.right = this.touch.up = this.touch.down = false;
+      this.touch.shoot = false;
+      if (this.joy) { this.joy.active = false; this.joy.pointer = null; this.joy.knob.setPosition(this.joy.bx, this.joy.by); }
+    }
   }
 
   // Mueve el knob del joystick y traduce a izquierda/derecha.
@@ -831,11 +854,11 @@ class GameScene extends Phaser.Scene {
       this.hudBoss.setVisible(false);
     }
 
-    // indicador de gamepad (brilla si el navegador ve un control)
-    if (this.hudPad) {
-      const on = this.input.gamepad && this.input.gamepad.total > 0;
-      this.hudPad.setAlpha(on ? 1 : 0.22);
-    }
+    // indicador de gamepad (brilla si el navegador ve un control) y, si hay
+    // control, oculta los controles en pantalla.
+    const padOn = !!(this.input.gamepad && this.input.gamepad.total > 0);
+    if (this.hudPad) this.hudPad.setAlpha(padOn ? 1 : 0.22);
+    this.setTouchVisible(!padOn);
   }
 
   floatText(x, y, msg, color) {

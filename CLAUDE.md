@@ -216,6 +216,17 @@ Al acabar munición vuelve a Escuadra.
     durante el movimiento y un cooldown corto. En el aire, abajo sigue apuntando
     hacia abajo. (`Player.startDodge` / `updateDodge`; disparador en `update`.)
 
+## ✅ Hecho (novena iteración 2026-06-03)
+35. **Pose de apuntar arriba** (estilo Metal Slug): Ita y La Choco tienen frames
+    `up` (recto) y `updiag` (diagonal) con el arma levantada (CharacterArt
+    `_drawIta`/`_drawChoco`). `Player` reproduce `<skin>-up`/`-updiag` al apuntar
+    arriba (recto si está quieto, diagonal si se mueve). Se conserva la flecha
+    `aim_arrow` como indicador fino.
+36. **Controles en pantalla se ocultan con gamepad**: `buildTouchControls`
+    registra los objetos (`touchControls`/`touchZones`) y `setTouchVisible`
+    los muestra/oculta. `drawHUD` los oculta cuando `input.gamepad.total > 0`
+    (y los regresa si se desconecta el control).
+
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).
 - **Más enemigos / variedad**: chairo con cuerno y otros tipos.

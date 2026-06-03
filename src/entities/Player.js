@@ -124,8 +124,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       SFX.play('jump');
     }
 
-    // animación según estado
-    if (!onGround) this.anims.play(this.skin + '-jump', true);
+    // animación según estado (apuntar arriba tiene pose propia, estilo Metal Slug)
+    const aimingUp = scene.aimUp();
+    const aimingDiag = aimingUp && vx !== 0;
+    if (aimingUp) this.anims.play(this.skin + (aimingDiag ? '-updiag' : '-up'), true);
+    else if (!onGround) this.anims.play(this.skin + '-jump', true);
     else if (vx !== 0) this.anims.play(this.skin + '-run', true);
     else this.anims.play(this.skin + '-idle', true);
 
