@@ -73,6 +73,7 @@ class MenuScene extends Phaser.Scene {
     this.tweens.add({ targets: start, alpha: 0.4, yoyo: true, repeat: -1, duration: 600 });
 
     const go = () => {
+      SFX.unlock();
       this.scene.start('CharacterSelectScene');
     };
     this.input.keyboard.once('keydown-ENTER', go);

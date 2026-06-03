@@ -115,7 +115,7 @@ class GameScene extends Phaser.Scene {
     const gp = this.input.gamepad;
     if (!gp) return;
     if (gp.total && gp.getPad(0)) this.pad = gp.getPad(0);
-    gp.on('connected', (pad) => { this.pad = pad; this.banner('🎮 ¡CONTROL LISTO!', '#9fe9ff'); });
+    gp.on('connected', (pad) => { this.pad = pad; SFX.unlock(); this.banner('🎮 ¡CONTROL LISTO!', '#9fe9ff'); });
   }
 
   // ¿Está presionado el botón? key = getter de Phaser ('A','Y','L1'...) o índice.
@@ -831,7 +831,7 @@ class GameScene extends Phaser.Scene {
     const ammoVal = this.player.ammo[this.player.weapon];
     const ammo = wpn.ammo === Infinity ? '∞' : (ammoVal || 0);
     const icon = this.player.mode === 'tank' ? '🛡️' : '🔫';
-    const special = this.player.mode === 'tank' ? '💥 CAÑONAZO' : '💣 x' + this.player.grenades;
+    const special = this.player.mode === 'tank' ? '💥 CAÑONAZO · ↓ bajar' : '💣 x' + this.player.grenades;
     this.hudWeapon.setText(icon + ' ' + wpn.name + '  [' + ammo + ']   ' + special);
     this.hudScore.setText('PUNTOS: ' + GAME_STATE.score);
     this.hudLevel.setText('Nivel ' + (this.levelIndex + 1) + ': ' + this.level.name);
@@ -882,6 +882,10 @@ class GameScene extends Phaser.Scene {
   update(time) {
     // gamepad: pausa (Start) y silencio (Back) por flanco
     if (this.pad) {
+      // desbloqueo de audio si se juega solo con control (sin toque/tecla)
+      if (!this._audioKick && this.pad.buttons.some(b => b && b.pressed)) {
+        this._audioKick = true; SFX.unlock();
+      }
       if (this._padJust(9)) this.togglePause();
       if (this._padJust(8)) this.toggleMute();
     }

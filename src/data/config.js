@@ -132,7 +132,7 @@ const LEVELS = [
     boss: { type: 'general', name: 'EL GENERAL', hp: 2600, triggerX: 6250 },
     // canales de mar: hay que brincarlos (caer = pierdes vida)
     gaps: [
-      { x: 1500, w: 150 }, { x: 2750, w: 170 }, { x: 3850, w: 150 }, { x: 5050, w: 190 },
+      { x: 1500, w: 150 }, { x: 2750, w: 170 }, { x: 3850, w: 150 }, { x: 5050, w: 150 },
     ],
     // charcos de marea / agua que daña al tocarla
     hazards: [
@@ -185,7 +185,7 @@ const LEVELS = [
       { x: 2980, type: 'vida' },
       { x: 3840, y: 198, type: 'bazuca' },   // mirador alto del faro
       { x: 4250, y: 354, type: 'escopeta' },
-      { x: 4700, type: 'tanque' },           // ¡sube al tanque!
+      { x: 5300, type: 'tanque' },           // ¡tanque en recta despejada hacia el jefe!
       { x: 5600, y: 272, type: 'cuerno' },
       { x: 5950, type: 'vida' },
       { x: 6500, type: 'bazuca' },
