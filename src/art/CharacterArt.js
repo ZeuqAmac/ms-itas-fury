@@ -25,7 +25,8 @@ const CharacterArt = {
   // -------------------------------------------------------
   _buildIta(scene) {
     const W = 34, H = 50;
-    ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'up', 'updiag'].forEach(fr => {
+    ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'up',
+      'updiag0', 'updiag1', 'updiag2', 'updiag3'].forEach(fr => {
       this._sprite(scene, 'ita_' + fr, W, H, p => this._drawIta(p, fr));
     });
   },
@@ -48,6 +49,11 @@ const CharacterArt = {
     if (fr === 'run2') { lf = -3; lb = 3; }
     if (fr === 'run3') { lf = 1; lb = 1; bob = -1; }
     if (fr === 'jump') { lf = 2; lb = -4; bob = -2; }
+    // apuntar arriba en diagonal: reusa el ciclo de piernas de correr
+    if (fr === 'updiag0') { lf = 3; lb = -3; }
+    if (fr === 'updiag1') { lf = 1; lb = 1; bob = -1; }
+    if (fr === 'updiag2') { lf = -3; lb = 3; }
+    if (fr === 'updiag3') { lf = 1; lb = 1; bob = -1; }
     const oy = bob;
 
     const leg = (x, y) => {
@@ -109,7 +115,7 @@ const CharacterArt = {
       p(mag, 19, 18 + oy, 4, 5); p(mag, 17, 21 + oy, 3, 3);   // cargador curvo
       p(gun, 24, 0 + oy, 3, 18); p(gunHi, 24, 0 + oy, 1, 18); // cañón vertical
       p(gun, 22, 8 + oy, 2, 2);                       // alza
-    } else if (fr === 'updiag') {
+    } else if (fr.indexOf('updiag') === 0) {
       // apuntar en diagonal hacia arriba-adelante
       p(skin, 19, 17 + oy, 4, 4); p(skin, 22, 14 + oy, 4, 4); p(glove, 25, 11 + oy, 5, 4);
       p(wood, 16, 23 + oy, 4, 4);                     // culata abajo-izq
@@ -134,7 +140,8 @@ const CharacterArt = {
   // -------------------------------------------------------
   _buildChoco(scene) {
     const W = 34, H = 50;
-    ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'up', 'updiag'].forEach(fr => {
+    ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'up',
+      'updiag0', 'updiag1', 'updiag2', 'updiag3'].forEach(fr => {
       this._sprite(scene, 'choco_' + fr, W, H, p => this._drawChoco(p, fr));
     });
   },
@@ -156,6 +163,11 @@ const CharacterArt = {
     if (fr === 'run2') { lf = -3; lb = 3; }
     if (fr === 'run3') { lf = 1; lb = 1; bob = -1; }
     if (fr === 'jump') { lf = 2; lb = -4; bob = -2; }
+    // apuntar arriba en diagonal: reusa el ciclo de piernas de correr
+    if (fr === 'updiag0') { lf = 3; lb = -3; }
+    if (fr === 'updiag1') { lf = 1; lb = 1; bob = -1; }
+    if (fr === 'updiag2') { lf = -3; lb = 3; }
+    if (fr === 'updiag3') { lf = 1; lb = 1; bob = -1; }
     const oy = bob;
 
     // pierna con overol amarillo + bota
@@ -215,7 +227,7 @@ const CharacterArt = {
       p(mag, 19, 19 + oy, 4, 6);                       // cargador recto
       p(gun, 24, 2 + oy, 3, 15); p(gunHi, 24, 2 + oy, 1, 15);   // cañón corto
       p(gun, 24, 0 + oy, 3, 2);                        // boca
-    } else if (fr === 'updiag') {
+    } else if (fr.indexOf('updiag') === 0) {
       // apuntar en diagonal hacia arriba-adelante
       p(skin, 19, 17 + oy, 4, 4); p(skin, 22, 14 + oy, 4, 4); p(glove, 25, 11 + oy, 5, 4);
       p(gun, 19, 22 + oy, 4, 5);                       // cajón
@@ -451,12 +463,12 @@ const CharacterArt = {
     mk('ita-run', ['ita_run0', 'ita_run1', 'ita_run2', 'ita_run3'], 12, -1);
     mk('ita-jump', ['ita_jump'], 1, 0);
     mk('ita-up', ['ita_up'], 1, 0);
-    mk('ita-updiag', ['ita_updiag'], 1, 0);
+    mk('ita-updiag', ['ita_updiag0', 'ita_updiag1', 'ita_updiag2', 'ita_updiag3'], 12, -1);
     mk('choco-idle', ['choco_idle0', 'choco_idle1'], 3, -1);
     mk('choco-run', ['choco_run0', 'choco_run1', 'choco_run2', 'choco_run3'], 12, -1);
     mk('choco-jump', ['choco_jump'], 1, 0);
     mk('choco-up', ['choco_up'], 1, 0);
-    mk('choco-updiag', ['choco_updiag'], 1, 0);
+    mk('choco-updiag', ['choco_updiag0', 'choco_updiag1', 'choco_updiag2', 'choco_updiag3'], 12, -1);
     mk('lucky-idle', ['lucky_idle0', 'lucky_idle1'], 4, -1);
     mk('lucky-walk', ['lucky_walk0', 'lucky_walk1'], 9, -1);
     mk('chairo-walk', ['chairo_walk0', 'chairo_walk1', 'chairo_walk2', 'chairo_walk3'], 8, -1);
