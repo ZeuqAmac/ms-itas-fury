@@ -36,7 +36,7 @@ class EndScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.tweens.add({ targets: btn, alpha: 0.45, yoyo: true, repeat: -1, duration: 600 });
 
-    const go = () => this.scene.start('MenuScene');
+    const go = () => { SFX.unlock(); this.scene.start('MenuScene'); };
     this.input.keyboard.once('keydown-ENTER', go);
     this.input.keyboard.once('keydown-SPACE', go);
     this.input.once('pointerdown', go);

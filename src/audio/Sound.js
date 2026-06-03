@@ -25,10 +25,19 @@ const SFX = {
     if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
   },
 
+  // Desbloquea el audio (debe llamarse desde un gesto del usuario). Reanuda el
+  // contexto e inicia la música si no está silenciada. Es idempotente.
+  unlock() {
+    this.resume();
+    if (!this.muted) this.startMusic();
+  },
+
   toggleMute() {
     this._ensure();
+    this.resume();                       // el toque del botón también desbloquea
     this.muted = !this.muted;
     if (this.master) this.master.gain.value = this.muted ? 0 : 0.9;
+    if (!this.muted) this.startMusic();
     return this.muted;
   },
 

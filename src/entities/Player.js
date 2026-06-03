@@ -103,6 +103,15 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  // Bajarse del tanque a voluntad (sin que explote), para no quedar atrapado.
+  dismountTank() {
+    if (this.mode !== 'tank') return;
+    this.exitTank(true);
+    this.setVelocityY(-200);                 // brinquito al bajar
+    this.scene.banner('¡BAJASTE DEL TANQUE!', '#c7e36a');
+    SFX.play('powerup');
+  }
+
   update(time) {
     if (!this.active) return;
     if (this.aimMark) this.aimMark.setVisible(false);   // oculto por defecto
@@ -225,6 +234,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       this.setVelocityY(-CONST.PLAYER_JUMP * 0.6);
       SFX.play('jump');
     }
+
+    // Bajarse del tanque: presiona ABAJO (por si no puedes cruzar un hueco).
+    const down = scene.aimDown();
+    if (down && !this._downPrev) { this._downPrev = down; return this.dismountTank(); }
+    this._downPrev = down;
 
     // Orugas: ruedan al moverse, quietas al parar.
     if (!this.anims.isPlaying) this.anims.play('tank-roll', true);

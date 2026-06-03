@@ -228,6 +228,16 @@ Al acabar munición vuelve a Escuadra.
     los muestra/oculta. `drawHUD` los oculta cuando `input.gamepad.total > 0`
     (y los regresa si se desconecta el control).
 
+## ✅ Arreglos (2026-06-03)
+37. **Bajarse del tanque** (`Player.dismountTank`, botón **abajo**): evita quedar
+    atrapado si el tanque no alcanza a cruzar un hueco. HUD muestra "↓ bajar".
+    Además, en el Nivel 2 el pickup del tanque se movió a la recta despejada
+    hacia el jefe (x 4700→5300) y el último canal de mar se angostó (190→150).
+38. **Audio robusto**: `SFX.unlock()` (reanuda contexto + música) se llama en cada
+    gesto (toque/tecla/`touchstart`) reintentando hasta `running`, al togglear
+    silencio, al conectar/usar el **gamepad** y en las transiciones de menú.
+    Soluciona el "había que subir/bajar el volumen para que sonara".
+
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).
 - **Más enemigos / variedad**: chairo con cuerno y otros tipos.

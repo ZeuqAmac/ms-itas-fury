@@ -148,6 +148,7 @@ class CharacterSelectScene extends Phaser.Scene {
   startGame() {
     const ch = CHARACTERS[this.selIndex];
     if (!ch || ch.locked) return;
+    SFX.unlock();
     GAME_STATE.character = ch.id;
     GAME_STATE.level = 0;
     GAME_STATE.lives = 3;

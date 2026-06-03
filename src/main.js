@@ -45,13 +45,17 @@ const refit = () => {
 window.addEventListener('resize', refit);
 window.addEventListener('orientationchange', () => setTimeout(refit, 300));
 
-// El audio del navegador requiere un gesto del usuario: arrancamos en el
-// primer toque/tecla y lanzamos la música.
+// El audio del navegador requiere un gesto del usuario. Reintentamos en cada
+// gesto (toque/tecla) hasta que el contexto quede 'running' — así no se queda
+// mudo si el primer intento no alcanzó a reanudarlo.
 const startAudio = () => {
-  SFX.resume();
-  SFX.startMusic();
-  window.removeEventListener('pointerdown', startAudio);
-  window.removeEventListener('keydown', startAudio);
+  SFX.unlock();
+  if (SFX.ctx && SFX.ctx.state === 'running') {
+    window.removeEventListener('pointerdown', startAudio);
+    window.removeEventListener('keydown', startAudio);
+    window.removeEventListener('touchstart', startAudio);
+  }
 };
 window.addEventListener('pointerdown', startAudio);
 window.addEventListener('keydown', startAudio);
+window.addEventListener('touchstart', startAudio);
