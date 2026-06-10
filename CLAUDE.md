@@ -57,7 +57,8 @@ assets/                 Imágenes originales (Ita Ita.png, Lucky.png) + recortes
   anims en `this.anims` (global). Outlines/sombras para look MS.
 - **Cuerpos de colisión** más chicos que el sprite, definidos en cada entidad.
 - **Niveles** en `LEVELS` (config.js); cada uno con `theme`
-  ('culiacan'|'jardin'|'malecon'), `enemies`, `pickups` (armas | 'vida' |
+  ('culiacan'|'jardin'|'malecon'|'sierra'), `enemies` (con `type` opcional:
+  'pistola'|'bazuca'|'machete'), `pows` (prisioneros), `pickups` (armas | 'vida' |
   'lucky' | 'tanque'), `gaps`, `hazards`, `platforms`, `boss`, `width`.
 
 ## Controles
@@ -238,6 +239,31 @@ Al acabar munición vuelve a Escuadra.
     silencio, al conectar/usar el **gamepad** y en las transiciones de menú.
     Soluciona el "había que subir/bajar el volumen para que sonara".
 
+## ✅ Hecho (décima iteración 2026-06-10)
+39. **Presentación estilo Metal Slug**: intro de misión "MISSION N → ¡START!"
+    (`GameScene.missionIntro`), "MISSION COMPLETE" al ganar, marcador arcade
+    en el HUD (`SCORE 0000000` con relleno de ceros) y popups de puntos
+    (+100/+150/+200/+1000) al abatir enemigos/jefes.
+40. **Prisioneros rescatables (POWs)**: señores de rancho atados con soga
+    (arte `pow_tied/free` en CharacterArt); tocarlos los libera → +500 puntos
+    y recompensa al azar (arma, granadas o vida), celebran y se van corriendo.
+    Config: `pows: [{x}]` por nivel; `spawnPow`/`rescuePow` en GameScene.
+41. **Variedad de enemigos** (`type` en `enemies` de config): **chairo bazuca**
+    (bandana roja, tubo RPG; mantiene distancia y lanza cohetes lentos con
+    estela que explotan al impacto) y **chairo machete** (greñudo; corre y
+    embiste, más daño al contacto). `CHAIRO_TYPES` en Chairo.js; arte por
+    variante en `_drawChairo`.
+42. **Nivel 3 "La Sierra Brava"** (tema `sierra`): fondo nuevo con doble
+    cordillera parallax, pinos, magueyes, cabañas con ventanas iluminadas y
+    suelo de terracería (`ground_sierra`); barrancas, brasas, riscos y
+    miradores. Mezcla fuerte de los 3 tipos de chairo.
+43. **Jefe volador "EL HALCÓN"** (helicóptero artillado, `boss_halcon` en
+    CharacterArt, rotor animado): flota sin gravedad, flanquea a Ita cambiando
+    de costado, ametralla en abanico desde el cañón de mentón, **suelta bombas**
+    cuando te tiene debajo (`spawnHeloBomb`) y pide refuerzos; en furia va más
+    rápido y manda machetes. Al morir cae girando entre explosiones.
+    (`cfg.flying` en Boss.js / `updateFlying`.)
+
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).
 - **Más enemigos / variedad**: chairo con cuerno y otros tipos.
@@ -245,7 +271,7 @@ Al acabar munición vuelve a Escuadra.
 - **Pantalla de puntajes / récord** (guardar mejor puntaje con localStorage).
 - **Enemigos en plataformas** (ahora solo andan en el suelo).
 - **Balance**: dificultad, cantidad de enemigos, vida.
-- **Nivel 2**: revisar a fondo (probado poco).
+- **Niveles 2 y 3**: revisar a fondo (probados poco).
 - **Mejoras de jugabilidad**: agacharse, recarga.
 - (Opcional) animación de disparo dedicada para Ita (frame de brazo distinto).
 - (Opcional) outline a los landmarks grandes (catedral/mercado) si se ven planos.

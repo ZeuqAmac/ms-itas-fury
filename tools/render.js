@@ -108,6 +108,22 @@ class Ctx {
         for (let x = Math.round(xs[k]); x < Math.round(xs[k + 1]); x++) this._set(x, y, c);
     }
   }
+  quadraticCurveTo(cx, cy, x, y) {
+    const [x0, y0] = this.path.length ? this.path[this.path.length - 1] : [cx, cy];
+    const N = 24;
+    for (let i = 1; i <= N; i++) {
+      const t = i / N, u = 1 - t;
+      this.path.push([u * u * x0 + 2 * u * t * cx + t * t * x, u * u * y0 + 2 * u * t * cy + t * t * y]);
+    }
+  }
+  stroke() {
+    const c = parseColor(this.strokeStyle);
+    const r = (this.lineWidth || 1) / 2;
+    for (const [px, py] of this.path) {
+      for (let yy = -r; yy <= r; yy++) for (let xx = -r; xx <= r; xx++)
+        if (xx * xx + yy * yy <= r * r) this._set(px + xx, py + yy, c);
+    }
+  }
   createLinearGradient() { return { addColorStop() {} }; }
   createRadialGradient() { return { addColorStop() {} }; }
   getImageData(x, y, w, h) { return { data: this.buf, width: w, height: h }; }

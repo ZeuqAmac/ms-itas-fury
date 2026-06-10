@@ -82,8 +82,9 @@ const CHARACTERS = [
 ];
 
 // --- Niveles ---
-// enemies: {x} posición de spawn en el suelo
-// pickups: {x, type}  type ∈ armas | 'vida' | 'lucky'
+// enemies: {x, type?} posición de spawn; type ∈ 'pistola' (def) | 'bazuca' | 'machete'
+// pickups: {x, type}  type ∈ armas | 'vida' | 'lucky' | 'tanque'
+// pows: {x} prisioneros rescatables (dan arma/puntos, estilo Metal Slug)
 // Cada nivel termina al llegar a la meta (goalX = width - 200)
 const LEVELS = [
   {
@@ -109,9 +110,10 @@ const LEVELS = [
     ],
     enemies: [
       { x: 700 }, { x: 1050 }, { x: 1300 }, { x: 1750 }, { x: 2150 }, { x: 2200 },
-      { x: 2600 }, { x: 2950 }, { x: 3300 }, { x: 3350 }, { x: 3800 }, { x: 4100 },
-      { x: 4400 }, { x: 4800 }, { x: 5100 }, { x: 5150 }, { x: 5600 }, { x: 5900 },
+      { x: 2600 }, { x: 2950 }, { x: 3300 }, { x: 3350, type: 'machete' }, { x: 3800 }, { x: 4100 },
+      { x: 4400 }, { x: 4800, type: 'bazuca' }, { x: 5100 }, { x: 5150 }, { x: 5600, type: 'machete' }, { x: 5900 },
     ],
+    pows: [{ x: 2050 }, { x: 4650 }],
     pickups: [
       { x: 1050, type: 'cuerno' },
       { x: 1500, type: 'vida' },
@@ -173,10 +175,11 @@ const LEVELS = [
     ],
     enemies: [
       { x: 620 }, { x: 1080 }, { x: 1320 }, { x: 1750 }, { x: 1950 },
-      { x: 2250 }, { x: 2480 }, { x: 2980 }, { x: 3300 }, { x: 3550 },
+      { x: 2250 }, { x: 2480, type: 'machete' }, { x: 2980 }, { x: 3300, type: 'bazuca' }, { x: 3550 },
       { x: 4060 }, { x: 4250 }, { x: 4600 }, { x: 4900 }, { x: 5300 },
-      { x: 5550 }, { x: 5950 }, { x: 6100 }, { x: 6450 }, { x: 6650 },
+      { x: 5550, type: 'machete' }, { x: 5950 }, { x: 6100, type: 'bazuca' }, { x: 6450 }, { x: 6650 },
     ],
+    pows: [{ x: 1680 }, { x: 4480 }],
     pickups: [
       { x: 760, type: 'escopeta' },
       { x: 1200, y: 286, type: 'vida' },     // mirador
@@ -190,6 +193,62 @@ const LEVELS = [
       { x: 5950, type: 'vida' },
       { x: 6500, type: 'bazuca' },
     ],
+  },
+  {
+    name: 'La Sierra Brava',
+    theme: 'sierra',
+    width: 7600,
+    // jefe volador: helicóptero artillado (vuela, ametralla y suelta bombas)
+    boss: { type: 'halcon', name: 'EL HALCÓN', hp: 3200, triggerX: 6650, flying: true },
+    // barrancas de la sierra
+    gaps: [{ x: 1750, w: 160 }, { x: 3450, w: 170 }, { x: 5250, w: 180 }],
+    hazards: [
+      { x: 950, w: 100, type: 'fire' },
+      { x: 2850, w: 110, type: 'fire' },
+      { x: 4450, w: 120, type: 'fire' },
+      { x: 6050, w: 100, type: 'fire' },
+    ],
+    // riscos y miradores a varias alturas
+    platforms: [
+      { x: 800, y: 400, w: 150 },
+      { x: 1050, y: 340, w: 150 },
+      { x: 1320, y: 280, w: 170 },     // risco con recompensa
+      { x: 1620, y: 380, w: 130 },     // brinco sobre la 1a barranca
+      { x: 2150, y: 360, w: 160 },
+      { x: 2450, y: 300, w: 150 },
+      { x: 3050, y: 380, w: 150 },
+      { x: 3380, y: 414, w: 110 },     // brinco sobre la 2a barranca
+      { x: 3700, y: 340, w: 160 },
+      { x: 3980, y: 280, w: 170 },     // mirador alto
+      { x: 4700, y: 380, w: 150 },
+      { x: 5000, y: 320, w: 150 },
+      { x: 5220, y: 404, w: 140 },     // brinco sobre la 3a barranca
+      { x: 5700, y: 360, w: 160 },
+      { x: 6000, y: 300, w: 160 },
+      { x: 6700, y: 370, w: 260 },     // explanada del jefe
+    ],
+    enemies: [
+      { x: 650 }, { x: 1000, type: 'machete' }, { x: 1300 }, { x: 1700, type: 'bazuca' },
+      { x: 2100 }, { x: 2200, type: 'machete' }, { x: 2600 }, { x: 2900, type: 'bazuca' },
+      { x: 3200 }, { x: 3650, type: 'machete' }, { x: 3900 }, { x: 4200, type: 'bazuca' },
+      { x: 4500 }, { x: 4600, type: 'machete' }, { x: 4950 }, { x: 5450, type: 'bazuca' },
+      { x: 5650, type: 'machete' }, { x: 5900 }, { x: 6200, type: 'bazuca' }, { x: 6400 },
+      { x: 6850, type: 'machete' }, { x: 7050 },
+    ],
+    pickups: [
+      { x: 900, type: 'cuerno' },
+      { x: 1320, y: 254, type: 'bazuca' },   // risco
+      { x: 1900, type: 'vida' },
+      { x: 2450, y: 274, type: 'lucky' },
+      { x: 3100, type: 'escopeta' },
+      { x: 3980, y: 254, type: 'vida' },     // mirador alto
+      { x: 4400, type: 'tanque' },
+      { x: 5000, y: 294, type: 'cuerno' },
+      { x: 5800, type: 'vida' },
+      { x: 6300, type: 'bazuca' },
+      { x: 6950, type: 'vida' },
+    ],
+    pows: [{ x: 1450 }, { x: 3550 }, { x: 5550 }],
   },
 ];
 

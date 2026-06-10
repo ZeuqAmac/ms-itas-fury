@@ -10,10 +10,21 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.setScale(BOSS_SCALE);
     this.setDepth(11);
-    this.body.setSize(30, 64);
-    this.body.setOffset(13, 12);
+    if (cfg.flying) {
+      // helicóptero: flota sin gravedad, cuerpo ancho y bajo
+      this.setScale(2.2);
+      this.body.setAllowGravity(false);
+      this.body.setSize(72, 30);
+      this.body.setOffset(20, 16);
+      this.hoverY = y;
+      this.side = 1;
+      this.sideTimer = 0;
+    } else {
+      this.setScale(BOSS_SCALE);
+      this.body.setSize(30, 64);
+      this.body.setOffset(13, 12);
+    }
     this.setCollideWorldBounds(true);
 
     this.cfg = cfg;
@@ -34,7 +45,9 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
     const p = this.scene.player;
     if (!p) return;
     const dir = this.flipX ? -1 : 1;
-    const gx = this.x + dir * 30, gy = this.y - 10;
+    // el helicóptero dispara desde el cañón de mentón (abajo del morro)
+    const gx = this.x + dir * (this.cfg.flying ? 46 : 30);
+    const gy = this.y + (this.cfg.flying ? 26 : -10);
     const aim = Math.atan2(p.y - gy, p.x - gx);
     for (let i = 0; i < n; i++) {
       const a = aim + (i - (n - 1) / 2) * spread;
@@ -46,7 +59,8 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
   update(time) {
     if (!this.active || this.dead) return;
     const p = this.scene.player;
-    if (!p || !p.active) { this.setVelocityX(0); return; }
+    if (!p || !p.active) { this.setVelocity(0, this.cfg.flying ? 0 : this.body.velocity.y); return; }
+    if (this.cfg.flying) return this.updateFlying(time, p);
 
     const dx = p.x - this.x;
     const dir = Math.sign(dx) || 1;
@@ -87,6 +101,52 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  // IA del helicóptero: se ladea alrededor de Ita, ametralla en abanico,
+  // suelta bombas cuando la tiene debajo y pide refuerzos.
+  updateFlying(time, p) {
+    const rage = this.hp < this.maxHp * 0.5;
+    if (rage && !this.raging) {
+      this.raging = true;
+      this.scene.banner('¡EL HALCÓN SE ENOJÓ!', '#ff3b3b');
+      this.scene.cameras.main.shake(300, 0.012);
+    }
+
+    // cambia de costado cada cierto tiempo (te flanquea)
+    if (time > this.sideTimer) {
+      this.sideTimer = time + (rage ? 2400 : 3800);
+      this.side = -this.side;
+    }
+    const W = this.scene.level.width;
+    const tx = Phaser.Math.Clamp(p.x + this.side * 230, 160, W - 160);
+    const ty = this.hoverY + Math.sin(time / 420) * 26 + (rage ? 40 : 0);
+    const spd = rage ? 240 : 170;
+    this.setVelocity(
+      Phaser.Math.Clamp((tx - this.x) * 2.4, -spd, spd),
+      Phaser.Math.Clamp((ty - this.y) * 2.4, -130, 130)
+    );
+    this.setFlipX(p.x < this.x);
+
+    // ráfaga del cañón de mentón, apuntada
+    if (time > this.nextShot) {
+      this.nextShot = time + (rage ? 850 : 1350);
+      this.fireFan(rage ? 5 : 3, 0.13, rage ? 520 : 460, 14);
+    }
+
+    // bombas cuando te tiene (casi) debajo
+    if (time > this.nextBurst && Math.abs(p.x - this.x) < 170) {
+      this.nextBurst = time + (rage ? 1400 : 2300);
+      this.scene.spawnHeloBomb(this.x, this.y + 30);
+    }
+
+    // refuerzos por tierra
+    if (time > this.nextSpecial) {
+      this.nextSpecial = time + (rage ? 5200 : 8000);
+      const ex = Phaser.Math.Clamp(p.x + this.side * 320, 120, W - 120);
+      this.scene.spawnChairo(ex, rage ? 'machete' : 'pistola');
+      if (rage) this.scene.spawnChairo(ex + 50, 'pistola');
+    }
+  }
+
   hit(dmg) {
     if (this.dead || !this.active) return;
     this.hp -= dmg;
@@ -101,6 +161,13 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
     this.setActive(false);
     this.body.enable = false;
     this.setVelocity(0, 0);
+    // el helicóptero cae girando antes de desbaratarse
+    if (this.cfg.flying) {
+      this.scene.tweens.add({
+        targets: this, y: CONST.GROUND_Y - 50, angle: this.flipX ? 38 : -38,
+        duration: 950, ease: 'Quad.in',
+      });
+    }
     // secuencia de explosiones
     this.scene.time.addEvent({
       delay: 130, repeat: 8,

@@ -11,7 +11,9 @@ const CharacterArt = {
     this._buildChoco(scene);
     this._buildLucky(scene);
     this._buildChairo(scene);
+    this._buildPow(scene);
     this._buildBoss(scene);
+    this._buildHelo(scene);
     this._buildTank(scene);
     this._anims(scene);
   },
@@ -287,16 +289,18 @@ const CharacterArt = {
   },
 
   // -------------------------------------------------------
-  //  CHAIRO  (28 x 48)
+  //  CHAIRO  (28 x 48) — 3 variantes: pistola, bazuca, machete
   // -------------------------------------------------------
   _buildChairo(scene) {
     const W = 28, H = 48;
     ['walk0', 'walk1', 'walk2', 'walk3'].forEach(fr => {
-      this._sprite(scene, 'chairo_' + fr, W, H, p => this._drawChairo(p, fr));
+      this._sprite(scene, 'chairo_' + fr, W, H, p => this._drawChairo(p, fr, ''));
+      this._sprite(scene, 'chairoB_' + fr, 36, H, p => this._drawChairo(p, fr, 'B'));
+      this._sprite(scene, 'chairoM_' + fr, W, H, p => this._drawChairo(p, fr, 'M'));
     });
   },
 
-  _drawChairo(p, fr) {
+  _drawChairo(p, fr, variant) {
     const skin = 0xcf9a63, skinSh = 0xa97a48, skinHi = 0xe0b27a;
     const pant = 0x21409c, pantSh = 0x16296b, pantHi = 0x3257c4;
     const vest = 0x6e1423, vestHi = 0x991c30, vestSh = 0x4e0e19;
@@ -325,14 +329,82 @@ const CharacterArt = {
     // cabeza
     p(skin, 9, 4 + oy, 11, 11); p(skinSh, 17, 5 + oy, 3, 9); p(skinHi, 10, 5 + oy, 2, 4);
     p(stubble, 10, 12 + oy, 9, 3);
-    p(cap, 7, 1 + oy, 14, 5); p(capHi, 8, 1 + oy, 12, 1); p(cap, 18, 4 + oy, 6, 2);
+    if (variant === 'B') {
+      // bandana roja (chairo bazuca)
+      p(0xb02a2a, 7, 1 + oy, 14, 5); p(0xd44a4a, 8, 1 + oy, 12, 1);
+      p(0xb02a2a, 5, 4 + oy, 3, 6); p(0x8a1f1f, 5, 8 + oy, 2, 3);  // nudo colgando
+    } else if (variant === 'M') {
+      // greña suelta (chairo machete)
+      p(0x1a140d, 7, 1 + oy, 14, 5); p(0x2e2418, 8, 1 + oy, 12, 1);
+      p(0x1a140d, 7, 5 + oy, 3, 5); p(0x1a140d, 19, 5 + oy, 3, 4);
+    } else {
+      p(cap, 7, 1 + oy, 14, 5); p(capHi, 8, 1 + oy, 12, 1); p(cap, 18, 4 + oy, 6, 2);
+    }
     p(brow, 10, 7 + oy, 4, 2); p(brow, 15, 7 + oy, 4, 2);
     p(0x111111, 11, 9 + oy, 2, 2); p(0x111111, 16, 9 + oy, 2, 2);
     p(0x111111, 12, 13 + oy, 5, 1);
 
-    // brazo delantero + pistola
-    p(skin, 18, 17 + oy, 4, 4); p(skin, 20, 19 + oy, 5, 3);
-    p(gun, 24, 19 + oy, 6, 3); p(gunHi, 24, 19 + oy, 6, 1);
+    // brazo delantero + arma según variante
+    if (variant === 'B') {
+      // tubo de bazuca al hombro + cohete asomando
+      p(skin, 18, 17 + oy, 4, 4); p(skin, 20, 14 + oy, 4, 4);
+      p(0x474d33, 6, 11 + oy, 26, 6); p(0x5e6645, 6, 11 + oy, 26, 2);  // tubo
+      p(0x2e3322, 6, 11 + oy, 3, 6);                                   // boca trasera
+      p(0xd23b2e, 32, 12 + oy, 4, 4);                                  // punta del cohete
+    } else if (variant === 'M') {
+      // machete por delante
+      p(skin, 18, 17 + oy, 4, 4); p(skin, 20, 16 + oy, 4, 4);
+      p(0x3a2a18, 23, 16 + oy, 3, 4);                                  // empuñadura
+      p(0xc8ccd2, 24, 11 + oy, 3, 6); p(0xc8ccd2, 25, 6 + oy, 3, 7);   // hoja en alto
+      p(0xf0f3f6, 26, 6 + oy, 1, 11);                                  // filo
+    } else {
+      p(skin, 18, 17 + oy, 4, 4); p(skin, 20, 19 + oy, 5, 3);
+      p(gun, 24, 19 + oy, 6, 3); p(gunHi, 24, 19 + oy, 6, 1);
+    }
+  },
+
+  // -------------------------------------------------------
+  //  PRISIONERO (30 x 46) — rescatable estilo Metal Slug:
+  //  señor de rancho con sombrero, atado con soga.
+  // -------------------------------------------------------
+  _buildPow(scene) {
+    ['tied0', 'tied1', 'free'].forEach(fr => {
+      this._sprite(scene, 'pow_' + fr, 30, 46, p => this._drawPow(p, fr));
+    });
+  },
+
+  _drawPow(p, fr) {
+    const skin = 0xd9a066, skinSh = 0xb07f4a;
+    const shirt = 0xe6dfc8, shirtSh = 0xc2b896, pant = 0x6b5436, pantSh = 0x4e3d26;
+    const hat = 0xd9bc6a, hatSh = 0xb0954a, beard = 0xe8e4da, rope = 0x8a6b45;
+    const ink = 0x0a0a0a, boot = 0x3a2a18;
+    const oy = fr === 'tied1' ? 1 : 0;
+    const free = fr === 'free';
+
+    // piernas (hincado si está atado, parado si está libre)
+    p(pant, 9, 31 + oy, 6, 11); p(pantSh, 9, 31 + oy, 2, 11);
+    p(pant, 16, 31 + oy, 6, 11); p(pantSh, 16, 31 + oy, 2, 11);
+    p(boot, 8, 42 + oy, 7, 3); p(boot, 16, 42 + oy, 7, 3);   // huaraches
+
+    // torso
+    p(shirt, 8, 16 + oy, 15, 16); p(shirtSh, 8, 28 + oy, 15, 4); p(shirtSh, 20, 16 + oy, 3, 16);
+    if (free) {
+      // brazos arriba (¡rescatado!)
+      p(shirt, 5, 8 + oy, 4, 10); p(skin, 5, 4 + oy, 4, 5);
+      p(shirt, 22, 8 + oy, 4, 10); p(skin, 22, 4 + oy, 4, 5);
+    } else {
+      // brazos pegados + soga
+      p(shirt, 5, 17 + oy, 4, 11); p(shirt, 22, 17 + oy, 4, 11);
+      p(rope, 5, 19 + oy, 21, 2); p(rope, 5, 24 + oy, 21, 2);
+      p(0x6e5436, 11, 19 + oy, 2, 7);                        // nudo
+    }
+
+    // cabeza con barba y sombrero
+    p(skin, 10, 6 + oy, 11, 10); p(skinSh, 18, 7 + oy, 3, 8);
+    p(beard, 10, 12 + oy, 11, 5); p(0xcfc9bc, 10, 15 + oy, 11, 2);
+    p(ink, 12, 9 + oy, 2, 2); p(ink, 17, 9 + oy, 2, 2);
+    p(hat, 6, 2 + oy, 19, 4); p(hatSh, 6, 5 + oy, 19, 1);    // ala
+    p(hat, 11, 0 + oy, 9, 4); p(hatSh, 11, 0 + oy, 2, 4);    // copa
   },
 
   // -------------------------------------------------------
@@ -395,6 +467,62 @@ const CharacterArt = {
     p(c.skin, 41, 30 + oy, 8, 8); p(c.skin, 45, 37 + oy, 8, 4);
     p(c.gun, 40, 34 + oy, 16, 10); p(c.gunHi, 40, 34 + oy, 16, 2);
     p(c.gun, 52, 36 + oy, 4, 3); p(c.gun, 52, 41 + oy, 4, 3);   // cañones
+  },
+
+  // -------------------------------------------------------
+  //  HELICÓPTERO "EL HALCÓN" (104 x 56) — jefe volador del N3.
+  //  Verde militar, piloto chairo, cañón de mentón y coheteras.
+  // -------------------------------------------------------
+  _buildHelo(scene) {
+    ['0', '1'].forEach(fr => {
+      this._sprite(scene, 'boss_halcon_' + fr, 104, 56, p => this._drawHelo(p, fr));
+    });
+    if (!scene.anims.exists('boss-halcon')) {
+      scene.anims.create({
+        key: 'boss-halcon',
+        frames: [{ key: 'boss_halcon_0' }, { key: 'boss_halcon_1' }],
+        frameRate: 14, repeat: -1,
+      });
+    }
+  },
+
+  _drawHelo(p, fr) {
+    const hull = 0x4a5d33, hullHi = 0x6b8049, hullSh = 0x32401f;
+    const rotor = 0x1c1c1c, glass = 0x8fd6e8, glassHi = 0xcdf2fa;
+    const metal = 0x2a2d31, metalHi = 0x55595e, gold = 0xe9c45a, red = 0xd23b2e;
+    const skin = 0xcf9a63, cap = 0x14110d, vest = 0x6e1423;
+
+    // --- rotor principal (2 posiciones de giro = blur) ---
+    p(metal, 50, 8, 5, 5);                                  // mástil
+    if (fr === '0') { p(rotor, 6, 5, 92, 3); }
+    else { p(rotor, 24, 5, 56, 3); p(rotor, 12, 6, 8, 2); p(rotor, 84, 6, 8, 2); }
+
+    // --- botalón de cola (izquierda) + rotor de cola ---
+    p(hull, 4, 20, 28, 8); p(hullHi, 4, 20, 28, 2); p(hullSh, 4, 26, 28, 2);
+    p(hull, 2, 9, 6, 14); p(hullSh, 6, 9, 2, 14);           // aleta vertical
+    p(rotor, 0, fr === '0' ? 8 : 12, 2, fr === '0' ? 16 : 8); // rotor de cola girando
+    p(gold, 10, 21, 6, 5);                                  // insignia dorada
+
+    // --- fuselaje (morro a la derecha) ---
+    p(hull, 28, 13, 52, 26); p(hullHi, 28, 13, 52, 4); p(hullSh, 28, 33, 52, 6);
+    p(hull, 80, 17, 12, 18); p(hullSh, 80, 30, 12, 5);      // morro
+    p(hull, 92, 21, 6, 10);                                 // punta
+    // cabina con piloto chairo
+    p(glass, 62, 16, 18, 12); p(glassHi, 63, 17, 6, 3);
+    p(cap, 66, 17, 8, 3); p(skin, 67, 20, 6, 5); p(vest, 66, 25, 8, 3);
+    p(0x111111, 68, 21, 2, 2); p(0x111111, 71, 21, 2, 2);   // lentes
+    // detalle del costado
+    p(hullSh, 34, 22, 22, 2); p(red, 36, 16, 10, 3);        // franja roja
+
+    // --- coheteras bajo las alas cortas ---
+    p(metal, 36, 38, 18, 7); p(metalHi, 36, 38, 18, 2);
+    p(red, 52, 39, 3, 2); p(red, 52, 42, 3, 2);             // puntas de cohetes
+    // --- cañón de mentón (apunta abajo-adelante) ---
+    p(metal, 74, 38, 6, 7); p(metal, 78, 43, 10, 4); p(metalHi, 78, 43, 10, 1);
+
+    // --- patines de aterrizaje ---
+    p(metal, 40, 44, 3, 7); p(metal, 66, 44, 3, 7);
+    p(metalHi, 32, 51, 48, 3);
   },
 
   // -------------------------------------------------------
@@ -472,6 +600,9 @@ const CharacterArt = {
     mk('lucky-idle', ['lucky_idle0', 'lucky_idle1'], 4, -1);
     mk('lucky-walk', ['lucky_walk0', 'lucky_walk1'], 9, -1);
     mk('chairo-walk', ['chairo_walk0', 'chairo_walk1', 'chairo_walk2', 'chairo_walk3'], 8, -1);
+    mk('chairoB-walk', ['chairoB_walk0', 'chairoB_walk1', 'chairoB_walk2', 'chairoB_walk3'], 7, -1);
+    mk('chairoM-walk', ['chairoM_walk0', 'chairoM_walk1', 'chairoM_walk2', 'chairoM_walk3'], 14, -1);
+    mk('pow-tied', ['pow_tied0', 'pow_tied1'], 2, -1);
     mk('tank-roll', ['tank_body0', 'tank_body1'], 8, -1);
   },
 };
