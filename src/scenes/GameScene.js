@@ -59,11 +59,16 @@ class GameScene extends Phaser.Scene {
     this.lucky = null;
 
     // --- Enemigos del nivel ---
-    this.level.enemies.forEach(e => this.spawnChairo(e.x));
+    this.level.enemies.forEach(e => this.spawnChairo(e.x, e.type));
     this.aliveEnemies = this.level.enemies.length;
 
     // --- Recogibles ---
     this.level.pickups.forEach(p => this.spawnPickup(p.x, p.type, p.y));
+
+    // --- Prisioneros rescatables (estilo Metal Slug) ---
+    this.pows = this.physics.add.staticGroup();
+    (this.level.pows || []).forEach(pw => this.spawnPow(pw.x));
+    this.physics.add.overlap(this.player, this.pows, this.rescuePow, null, this);
 
     // --- Jefe / Meta ---
     this.bossCfg = this.level.boss || null;
@@ -103,7 +108,37 @@ class GameScene extends Phaser.Scene {
 
     // --- HUD ---
     this.buildHUD();
-    this.banner('¡VÁMONOS RECIO!', '#ffd24a');
+    this.missionIntro();
+  }
+
+  // Secuencia de entrada estilo arcade: "MISSION N" → "¡START!".
+  missionIntro() {
+    const cx = CONST.WIDTH / 2, cy = 150;
+    const bar = this.add.rectangle(cx, cy, CONST.WIDTH, 86, 0x000000, 0.55)
+      .setScrollFactor(0).setDepth(2000).setScaleX(0);
+    const title = this.add.text(cx, cy - 14, 'M I S S I O N  ' + (this.levelIndex + 1), {
+      fontFamily: 'Trebuchet MS', fontStyle: 'bold', fontSize: '42px', color: '#ffffff',
+      stroke: '#1a3a8a', strokeThickness: 7,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(2001).setAlpha(0);
+    const sub = this.add.text(cx, cy + 26, this.level.name.toUpperCase(), {
+      fontFamily: 'Trebuchet MS', fontStyle: 'bold', fontSize: '18px', color: '#ffd24a',
+      stroke: '#000', strokeThickness: 4,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(2001).setAlpha(0);
+
+    this.tweens.add({ targets: bar, scaleX: 1, duration: 240, ease: 'Cubic.out' });
+    this.tweens.add({ targets: title, alpha: 1, scale: { from: 1.7, to: 1 }, duration: 320, ease: 'Back.out' });
+    this.tweens.add({ targets: sub, alpha: 1, delay: 250, duration: 250 });
+
+    this.time.delayedCall(1500, () => {
+      title.setText('¡ S T A R T !').setColor('#ffd24a');
+      sub.setVisible(false);
+      this.tweens.add({ targets: title, scale: { from: 1.5, to: 1 }, duration: 200, ease: 'Back.out' });
+      this.tweens.add({ targets: title, alpha: 0.2, yoyo: true, repeat: 3, duration: 110 });
+      this.tweens.add({
+        targets: [bar, title], alpha: 0, delay: 800, duration: 300,
+        onComplete: () => { bar.destroy(); title.destroy(); sub.destroy(); },
+      });
+    });
   }
 
   // ---------- Gamepad (GameSir X2 y mandos estándar) ----------
@@ -276,17 +311,66 @@ class GameScene extends Phaser.Scene {
   }
 
   // ---------- Spawns ----------
-  spawnChairo(x) {
-    const c = new Chairo(this, x, CONST.GROUND_Y - 60);
+  spawnChairo(x, type) {
+    const c = new Chairo(this, x, CONST.GROUND_Y - 60, type);
     this.enemies.add(c);
     return c;
+  }
+
+  // Prisionero atado (rescatable). Tocarlo lo libera: da puntos y recompensa.
+  spawnPow(x) {
+    const s = this.pows.create(x, CONST.GROUND_Y - 46, 'pow_tied0');
+    s.setScale(2).setDepth(7);
+    s.refreshBody();
+    s.play('pow-tied');
+    return s;
+  }
+
+  rescuePow(a, b) {
+    const pow = (a instanceof Player) ? b : a;
+    const player = (a instanceof Player) ? a : b;
+    if (!pow.active || pow._saved) return;
+    pow._saved = true;
+
+    GAME_STATE.score += 500;
+    this.floatText(pow.x, pow.y - 30, '+500', '#ffd24a');
+    SFX.play('lucky');
+
+    // recompensa: arma, granadas o vida (al azar)
+    const roll = Phaser.Math.Between(0, 3);
+    if (roll <= 1) {
+      const w = Phaser.Math.RND.pick(['cuerno', 'escopeta', 'bazuca']);
+      player.giveWeapon(w);
+      this.floatText(pow.x, pow.y - 56, '¡' + WEAPONS[w].name.toUpperCase() + '!', '#ff9933');
+    } else if (roll === 2) {
+      player.grenades += 3;
+      this.floatText(pow.x, pow.y - 56, '💣 +3 GRANADAS', '#c7e36a');
+    } else {
+      player.heal(30);
+      this.floatText(pow.x, pow.y - 56, '+30 VIDA', '#4be36a');
+    }
+    this.floatText(pow.x, pow.y - 82, '¡GRACIAS, COMPA!', '#ffffff');
+
+    // se libera, celebra y se va corriendo
+    const freed = this.add.sprite(pow.x, pow.y, 'pow_free').setScale(2).setDepth(7);
+    pow.destroy();
+    this.tweens.add({ targets: freed, y: freed.y - 16, yoyo: true, repeat: 2, duration: 160, ease: 'Quad.out' });
+    this.time.delayedCall(700, () => {
+      if (!freed.active) return;
+      freed.setFlipX(true);
+      this.tweens.add({
+        targets: freed, x: freed.x - 320, alpha: 0, duration: 2200,
+        onComplete: () => freed.destroy(),
+      });
+    });
   }
 
   // Suelo en segmentos, dejando huecos (pozos) donde haya gaps.
   buildGround(W, gaps) {
     const gy = CONST.GROUND_Y;
     const theme = this.level.theme;
-    const groundTex = theme === 'malecon' ? 'ground_malecon' : 'ground';
+    const groundTex = theme === 'malecon' ? 'ground_malecon'
+                    : theme === 'sierra' ? 'ground_sierra' : 'ground';
     const tint = theme === 'jardin' ? 0xc7b27e : 0xffffff;
     const sorted = gaps.slice().sort((a, b) => a.x - b.x);
     let cursor = 0;
@@ -391,6 +475,48 @@ class GameScene extends Phaser.Scene {
     b.setVelocity(vx, vy);
     b.dmg = dmg || 12;
     this.time.delayedCall(2500, () => { if (b.active) b.destroy(); });
+  }
+
+  // Cohete enemigo (chairo bazuca): lento, explota al impactar.
+  spawnEnemyRocket(x, y, vx, vy) {
+    const b = this.enemyBullets.create(x, y, 'rocket');
+    b.setDepth(7);
+    b.body.setAllowGravity(false);
+    b.setVelocity(vx, vy);
+    b.rotation = Math.atan2(vy, vx);
+    b.dmg = 24;
+    b.isRocket = true;
+    // estela de humo
+    const trail = this.time.addEvent({
+      delay: 70, loop: true, callback: () => {
+        if (!b.active) { trail.remove(); return; }
+        const sm = this.add.image(b.x - Math.sign(vx) * 12, b.y, 'smoke')
+          .setTint(0xbbbbbb).setScale(0.35).setAlpha(0.5).setDepth(6);
+        this.tweens.add({ targets: sm, scale: 0.9, alpha: 0, duration: 380, onComplete: () => sm.destroy() });
+      },
+    });
+    this.time.delayedCall(3200, () => { trail.remove(); if (b.active) b.destroy(); });
+  }
+
+  // Bomba que suelta el helicóptero: cae y explota al tocar el suelo o a Ita.
+  spawnHeloBomb(x, y) {
+    const b = this.physics.add.image(x, y, 'bomb').setDepth(9).setScale(1.6);
+    b.setVelocity(Phaser.Math.Between(-20, 20), 60);
+    this.physics.add.collider(b, this.floors, () => this.explodeHeloBomb(b));
+    this.physics.add.collider(b, this.platforms, () => this.explodeHeloBomb(b));
+    this.physics.add.overlap(b, this.player, () => this.explodeHeloBomb(b));
+    this.time.delayedCall(4000, () => { if (b.active) b.destroy(); });
+  }
+
+  explodeHeloBomb(b) {
+    if (!b || !b.active) return;
+    const bx = b.x, by = b.y;
+    b.destroy();
+    this.boom(bx, by, 1.2);
+    if (this.player.active &&
+        Phaser.Math.Distance.Between(bx, by, this.player.x, this.player.y) < 95) {
+      this.player.takeHit(20);
+    }
   }
 
   spawnLuckyBullet(x, y, vx, vy) {
@@ -577,6 +703,7 @@ class GameScene extends Phaser.Scene {
     const bullet = (a instanceof Player) ? b : a;
     if (!bullet.active) return;
     const dmg = bullet.dmg || 12;
+    if (bullet.isRocket) this.boom(bullet.x, bullet.y, 1.0);
     bullet.destroy();
     player.takeHit(dmg);
   }
@@ -587,7 +714,7 @@ class GameScene extends Phaser.Scene {
     const now = this.time.now;
     if (now < (enemy.contactCd || 0)) return;
     enemy.contactCd = now + 700;
-    player.takeHit(14);
+    player.takeHit(enemy.touchDmg || 14);
   }
 
   collectPickup(a, b) {
@@ -655,8 +782,10 @@ class GameScene extends Phaser.Scene {
   spawnBoss() {
     this.bossSpawned = true;
     const x = Math.min(this.level.width - 120, this.player.x + 360);
-    this.boss = new Boss(this, x, CONST.GROUND_Y - 90, this.bossCfg);
-    this.physics.add.collider(this.boss, this.floors);
+    // los jefes voladores (helicóptero) aparecen en el aire
+    const y = this.bossCfg.flying ? CONST.GROUND_Y - 280 : CONST.GROUND_Y - 90;
+    this.boss = new Boss(this, x, y, this.bossCfg);
+    if (!this.bossCfg.flying) this.physics.add.collider(this.boss, this.floors);
     this.physics.add.overlap(this.playerBullets, this.boss, this.hitBossWithBullet, null, this);
     this.physics.add.overlap(this.luckyBullets, this.boss, this.hitBossWithLucky, null, this);
     this.physics.add.overlap(this.boss, this.player, this.bossTouchPlayer, null, this);
@@ -696,13 +825,16 @@ class GameScene extends Phaser.Scene {
 
   onBossDefeated() {
     GAME_STATE.score += 1000;
+    if (this.boss) this.floatText(this.boss.x, this.boss.y - 60, '+1000', '#ffd24a');
     this.banner('¡JEFE DERROTADO!', '#4be36a');
     this.time.delayedCall(1100, () => this.completeLevel());
   }
 
   // ---------- Muertes / progreso ----------
   onChairoKilled(c) {
-    GAME_STATE.score += 100;
+    const pts = c.score || 100;
+    GAME_STATE.score += pts;
+    this.floatText(c.x, c.y - 24, '+' + pts, '#ffd24a');
     this.aliveEnemies = Math.max(0, this.aliveEnemies - 1);
   }
 
@@ -756,7 +888,7 @@ class GameScene extends Phaser.Scene {
     this.physics.pause();
     const isLast = this.levelIndex >= LEVELS.length - 1;
     SFX.play('win');
-    this.banner(isLast ? '¡TERMINASTE EL JUEGO!' : '¡NIVEL COMPLETADO!', '#4be36a');
+    this.banner(isLast ? '¡MISSION ALL COMPLETE!' : 'MISSION COMPLETE', '#ffd24a');
     this.time.delayedCall(1600, () => {
       if (isLast) {
         this.scene.start('EndScene', { win: true });
@@ -778,7 +910,10 @@ class GameScene extends Phaser.Scene {
     this.hudGfx = this.add.graphics().setScrollFactor(0).setDepth(d);
     const txtStyle = { fontFamily: 'Trebuchet MS', fontSize: '16px', color: '#ffffff' };
     this.hudWeapon = this.add.text(16, 42, '', txtStyle).setScrollFactor(0).setDepth(d + 1);
-    this.hudScore  = this.add.text(CONST.WIDTH - 16, 14, '', txtStyle).setOrigin(1, 0).setScrollFactor(0).setDepth(d + 1);
+    this.hudScore  = this.add.text(CONST.WIDTH - 16, 12, '', {
+      ...txtStyle, fontStyle: 'bold', fontSize: '20px', color: '#ffffff',
+      stroke: '#1a3a8a', strokeThickness: 4,
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(d + 1);
     this.hudLevel  = this.add.text(CONST.WIDTH - 16, 36, '', { ...txtStyle, fontSize: '13px', color: '#ffd24a' }).setOrigin(1, 0).setScrollFactor(0).setDepth(d + 1);
     this.hudLucky  = this.add.text(16, 66, '', { ...txtStyle, fontSize: '13px', color: '#66f0ff' }).setScrollFactor(0).setDepth(d + 1);
     this.hudBoss   = this.add.text(CONST.WIDTH / 2, 22, '', {
@@ -833,8 +968,8 @@ class GameScene extends Phaser.Scene {
     const icon = this.player.mode === 'tank' ? '🛡️' : '🔫';
     const special = this.player.mode === 'tank' ? '💥 CAÑONAZO · ↓ bajar' : '💣 x' + this.player.grenades;
     this.hudWeapon.setText(icon + ' ' + wpn.name + '  [' + ammo + ']   ' + special);
-    this.hudScore.setText('PUNTOS: ' + GAME_STATE.score);
-    this.hudLevel.setText('Nivel ' + (this.levelIndex + 1) + ': ' + this.level.name);
+    this.hudScore.setText('SCORE ' + String(GAME_STATE.score).padStart(7, '0'));
+    this.hudLevel.setText('MISSION ' + (this.levelIndex + 1) + ': ' + this.level.name);
     if (this.lucky && this.lucky.active) {
       const lf = Math.ceil(this.lucky.hp);
       this.hudLucky.setText('🐶 Lucky HP: ' + lf);

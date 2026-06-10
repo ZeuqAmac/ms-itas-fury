@@ -1,12 +1,21 @@
 // ============================================================
-//  Chairo — enemigo básico (pixel-art animado)
+//  Chairo — enemigo básico (pixel-art animado).
+//  Variantes: 'pistola' (camina y dispara), 'bazuca' (mantiene
+//  distancia y lanza cohetes) y 'machete' (corre a cuchillarte).
 // ============================================================
 
 const CHAIRO_SCALE = 1.85;
 
+const CHAIRO_TYPES = {
+  pistola: { hp: 60, speed: [55, 90],   tex: 'chairo',  anim: 'chairo-walk',  score: 100, touchDmg: 14 },
+  bazuca:  { hp: 85, speed: [40, 60],   tex: 'chairoB', anim: 'chairoB-walk', score: 200, touchDmg: 14 },
+  machete: { hp: 50, speed: [145, 180], tex: 'chairoM', anim: 'chairoM-walk', score: 150, touchDmg: 20 },
+};
+
 class Chairo extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y) {
-    super(scene, x, y, 'chairo_walk0');
+  constructor(scene, x, y, type) {
+    const cfg = CHAIRO_TYPES[type] || CHAIRO_TYPES.pistola;
+    super(scene, x, y, cfg.tex + '_walk0');
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
@@ -16,13 +25,16 @@ class Chairo extends Phaser.Physics.Arcade.Sprite {
     this.body.setOffset(8, 3);
     this.setCollideWorldBounds(false);
 
-    this.hp = 60;
-    this.speed = Phaser.Math.Between(55, 90);
+    this.type = CHAIRO_TYPES[type] ? type : 'pistola';
+    this.hp = cfg.hp;
+    this.score = cfg.score;
+    this.touchDmg = cfg.touchDmg;
+    this.speed = Phaser.Math.Between(cfg.speed[0], cfg.speed[1]);
     this.nextShot = scene.time.now + Phaser.Math.Between(800, 2200);
     this.contactCd = 0;
     this._dying = false;
 
-    this.play('chairo-walk');
+    this.play(cfg.anim);
   }
 
   update(time) {
@@ -35,6 +47,27 @@ class Chairo extends Phaser.Physics.Arcade.Sprite {
     this.setFlipX(dir < 0);
     const dist = Math.abs(dx);
 
+    if (this.type === 'machete') {
+      // corre directo al jugador (embiste cuando lo tiene cerca)
+      const rush = dist < 160 ? 1.4 : 1;
+      this.setVelocityX(dir * this.speed * rush);
+      return;
+    }
+
+    if (this.type === 'bazuca') {
+      // mantiene distancia media y lanza cohetes lentos
+      if (dist > 420) this.setVelocityX(dir * this.speed);
+      else if (dist < 240) this.setVelocityX(-dir * this.speed);
+      else this.setVelocityX(0);
+      if (dist < 560 && Math.abs(p.y - this.y) < 150 && time > this.nextShot) {
+        this.nextShot = time + Phaser.Math.Between(2600, 4000);
+        this.scene.spawnEnemyRocket(this.x + dir * 30, this.y - 16, dir * 300, 0);
+        this.scene.muzzle(this.x + dir * 30, this.y - 16, dir, 0xffaa55);
+      }
+      return;
+    }
+
+    // 'pistola' (comportamiento clásico)
     if (dist > 80) this.setVelocityX(dir * this.speed);
     else this.setVelocityX(0);
 

@@ -11,6 +11,7 @@ const SceneryArt = {
     this._sky(scene, 'sky_culiacan', [0x274a6e, 0x6e7f8c, 0xe79a52]);
     this._sky(scene, 'sky_jardin',   [0x6fb0d6, 0x9fc9c0, 0xd9ecb0]);
     this._sky(scene, 'sky_malecon',  [0x1f8fcf, 0x7fcfe2, 0xffe6ac]);
+    this._sky(scene, 'sky_sierra',   [0x1d2a52, 0x7a5a72, 0xe8915a]);
     this._skyline(scene);
     this._colonial(scene);
     this._market(scene);
@@ -21,6 +22,11 @@ const SceneryArt = {
     this._sandbags(scene);
     this._barrel(scene);
     this._rubble(scene);
+    // --- Sierra de Sinaloa ---
+    this._sierraHills(scene);
+    this._pine(scene);
+    this._agave(scene);
+    this._cabin(scene);
     // --- Malecón de Mazatlán ---
     this._sea(scene);
     this._islands(scene);
@@ -241,6 +247,83 @@ const SceneryArt = {
     });
   },
 
+  // ---------- Cerros de la sierra (tileable, sin contorno) ----------
+  _sierraHills(scene) {
+    const W = 512, H = 220;
+    Pixel.sprite(scene, 'sierra_hills', W, H, (p, ctx) => {
+      // cordillera lejana (morada por la bruma del atardecer)
+      ctx.fillStyle = 'rgba(82,62,92,0.85)';
+      ctx.beginPath(); ctx.moveTo(0, H);
+      ctx.lineTo(0, 120); ctx.lineTo(90, 46); ctx.lineTo(180, 110); ctx.lineTo(280, 30);
+      ctx.lineTo(380, 96); ctx.lineTo(470, 56); ctx.lineTo(512, 100); ctx.lineTo(512, H);
+      ctx.fill();
+      // cordillera cercana (más oscura) con silueta de pinos en la cresta
+      ctx.fillStyle = 'rgba(48,52,42,0.95)';
+      ctx.beginPath(); ctx.moveTo(0, H);
+      ctx.lineTo(0, 160); ctx.lineTo(120, 96); ctx.lineTo(250, 150); ctx.lineTo(360, 86);
+      ctx.lineTo(460, 140); ctx.lineTo(512, 120); ctx.lineTo(512, H);
+      ctx.fill();
+      const tree = (x, y, s) => {
+        ctx.fillStyle = 'rgba(34,38,30,0.95)';
+        ctx.beginPath(); ctx.moveTo(x - 5 * s, y); ctx.lineTo(x, y - 14 * s); ctx.lineTo(x + 5 * s, y); ctx.fill();
+      };
+      tree(60, 130, 1); tree(120, 98, 1.2); tree(200, 130, 0.9); tree(360, 88, 1.2);
+      tree(420, 116, 1); tree(490, 126, 0.8);
+    }, null);
+  },
+
+  // ---------- Pino serrano ----------
+  _pine(scene) {
+    Pixel.sprite(scene, 'pine', 70, 150, (p, ctx) => {
+      const dk = 0x24422a, md = 0x33593a, hi = 0x47734c, trunk = 0x5e4429;
+      p(trunk, 31, 96, 8, 54); p(0x4a3520, 31, 96, 3, 54);
+      // copa en capas triangulares
+      const layer = (y, half, col) => {
+        ctx.fillStyle = Pixel.col(col);
+        ctx.beginPath(); ctx.moveTo(35 - half, y + 28); ctx.lineTo(35, y); ctx.lineTo(35 + half, y + 28); ctx.fill();
+      };
+      layer(72, 30, dk); layer(46, 26, md); layer(22, 21, md); layer(2, 16, hi);
+      // nieve de luz en las puntas
+      p(hi, 33, 2, 4, 4); p(hi, 30, 26, 4, 3);
+    });
+  },
+
+  // ---------- Maguey / agave ----------
+  _agave(scene) {
+    Pixel.sprite(scene, 'agave', 64, 46, (p, ctx) => {
+      const dk = 0x3f7a52, md = 0x559a68, hi = 0x7fc08a;
+      const blade = (x0, y0, x1, y1, w, col) => {
+        ctx.strokeStyle = Pixel.col(col); ctx.lineWidth = w; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo((x0 + x1) / 2, y1 - 14, x1, y1); ctx.stroke();
+      };
+      blade(32, 44, 6, 16, 6, dk); blade(32, 44, 58, 16, 6, dk);
+      blade(32, 44, 14, 6, 6, md); blade(32, 44, 50, 6, 6, md);
+      blade(32, 44, 24, 2, 7, hi); blade(32, 44, 40, 2, 7, hi);
+      blade(32, 44, 32, 0, 7, md);
+      p(0x8a6b45, 26, 40, 12, 6);                          // base de tierra
+    });
+  },
+
+  // ---------- Cabaña serrana (madera + lámina) ----------
+  _cabin(scene) {
+    Pixel.sprite(scene, 'cabin', 150, 140, (p, ctx) => {
+      const wood = 0x8a5f38, woodSh = 0x6b4628, woodHi = 0xa87a4c;
+      const roof = 0x707880, roofSh = 0x4e555c;
+      // techo de lámina a dos aguas
+      ctx.fillStyle = Pixel.col(roof);
+      ctx.beginPath(); ctx.moveTo(0, 42); ctx.lineTo(75, 4); ctx.lineTo(150, 42); ctx.fill();
+      p(roofSh, 0, 38, 150, 5);
+      for (let x = 14; x < 145; x += 18) p(roofSh, x, 16 + Math.abs(75 - x) / 4, 3, 22);  // canales
+      // muros de tablones
+      p(wood, 10, 42, 130, 98); p(woodHi, 10, 42, 130, 4);
+      for (let y = 56; y < 138; y += 14) p(woodSh, 10, y, 130, 2);
+      // puerta y ventana con luz cálida
+      p(0x3a2a18, 62, 88, 26, 52); p(0x52391f, 64, 90, 22, 4);
+      p(0x2a1d12, 22, 66, 26, 24); p(0xffd86a, 25, 69, 20, 18);
+      p(0x2a1d12, 102, 66, 26, 24); p(0xffd86a, 105, 69, 20, 18);
+    });
+  },
+
   // ---------- Mar (banda de oleaje, tileable) ----------
   _sea(scene) {
     Pixel.sprite(scene, 'sea', 128, 150, (p, ctx) => {
@@ -341,8 +424,9 @@ const SceneryArt = {
   buildLevelBackground(scene, theme, W) {
     const gy = CONST.GROUND_Y;
 
-    // El malecón de Mazatlán tiene su propia composición (mar, islas, faro).
+    // El malecón de Mazatlán y la sierra tienen su propia composición.
     if (theme === 'malecon') { this._buildMalecon(scene, W, gy); return; }
+    if (theme === 'sierra') { this._buildSierra(scene, W, gy); return; }
 
     scene.add.image(0, 0, theme === 'jardin' ? 'sky_jardin' : 'sky_culiacan')
       .setOrigin(0, 0).setScrollFactor(0).setDepth(-30);
@@ -394,6 +478,63 @@ const SceneryArt = {
     }
 
     // viñeta atmosférica fija (encuadra y oscurece los bordes)
+    scene.add.image(0, 0, 'vignette').setOrigin(0, 0).setScrollFactor(0).setDepth(900);
+  },
+
+  // -------------------------------------------------------
+  //  Fondo de la Sierra (cordilleras, pinos, cabañas, magueyes)
+  // -------------------------------------------------------
+  _buildSierra(scene, W, gy) {
+    // cielo de atardecer serrano
+    scene.add.image(0, 0, 'sky_sierra').setOrigin(0, 0).setScrollFactor(0).setDepth(-30);
+
+    // cordilleras al fondo (doble capa de parallax)
+    scene.add.tileSprite(0, gy - 200, W, 220, 'sierra_hills')
+      .setOrigin(0, 0).setScrollFactor(0.18).setDepth(-26);
+    scene.add.tileSprite(0, gy - 130, W, 220, 'sierra_hills')
+      .setOrigin(0, 0).setScrollFactor(0.38).setDepth(-24).setTint(0x9a8a9a).setAlpha(0.8);
+
+    // cabañas y pinos en la capa media
+    let i = 0;
+    for (let x = 200; x < W; x += 460) {
+      if (i % 3 === 1) {
+        scene.add.image(x, gy + 10, 'cabin').setOrigin(0.5, 1).setScrollFactor(0.55)
+          .setDepth(-19).setScale(0.95).setTint(0xd8c8c0);
+      } else {
+        scene.add.image(x, gy + 8, 'pine').setOrigin(0.5, 1).setScrollFactor(0.55)
+          .setDepth(-20).setScale(0.9).setTint(0xb8a8b0);
+      }
+      i++;
+    }
+
+    // magueyes a media distancia
+    for (let x = 340; x < W - 160; x += 530) {
+      scene.add.image(x, gy + 8, 'agave').setOrigin(0.5, 1).setScrollFactor(0.8)
+        .setDepth(-12).setTint(0xd0c8b8);
+    }
+
+    // pinos y magueyes en primer plano
+    for (let x = 280; x < W - 180; x += 560) {
+      scene.add.image(x, gy + 6, 'pine').setOrigin(0.5, 1).setScrollFactor(1).setDepth(2).setScale(1.1);
+    }
+    for (let x = 520; x < W - 160; x += 640) {
+      scene.add.image(x, gy + 8, 'agave').setOrigin(0.5, 1).setScrollFactor(1).setDepth(3);
+    }
+
+    // props de guerra (sacos, tambos, escombros) para cobertura visual
+    for (let x = 640; x < W - 240; x += 520) {
+      scene.add.image(x, gy + 9, 'sandbags').setOrigin(0.5, 1).setScrollFactor(1)
+        .setDepth(4).setScale(1.15);
+    }
+    for (let x = 420, j = 0; x < W - 200; x += 620, j++) {
+      const img = scene.add.image(x, gy + 9, 'barrel').setOrigin(0.5, 1).setScrollFactor(1).setDepth(4);
+      if (j % 2 === 1) img.setFlipX(true);
+    }
+    for (let x = 220; x < W; x += 340) {
+      scene.add.image(x, gy + 12, 'rubble').setOrigin(0.5, 1).setScrollFactor(1).setDepth(3).setAlpha(0.95);
+    }
+
+    // viñeta atmosférica
     scene.add.image(0, 0, 'vignette').setOrigin(0, 0).setScrollFactor(0).setDepth(900);
   },
 

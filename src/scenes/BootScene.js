@@ -12,8 +12,11 @@ class BootScene extends Phaser.Scene {
     this.genCrate();
     this.genGround();
     this.genGroundMalecon();
+    this.genGroundSierra();
     this.genGoal();
     this.genGrenade();
+    this.genBomb();
+    this.genRocket();
     this.genAimArrow();
     this.genPlatform();
 
@@ -138,6 +141,45 @@ class BootScene extends Phaser.Scene {
     g.fillRect(8, 50, 2, 2); g.fillRect(38, 28, 2, 2); g.fillRect(56, 64, 2, 2);
     g.generateTexture('ground_malecon', w, h);
     g.destroy();
+  }
+
+  // --- Suelo de la sierra (terracería con piedras) ---
+  genGroundSierra() {
+    const w = 64, h = 80;
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0x7a5a38, 1).fillRect(0, 0, w, h);          // tierra
+    g.fillStyle(0x96703f, 1).fillRect(0, 0, w, 8);          // superficie
+    g.fillStyle(0x5e4429, 1).fillRect(0, 8, w, 2);
+    // rodadas de troca en la terracería
+    g.fillStyle(0x6b4d2e, 1).fillRect(0, 3, w, 2);
+    // piedras y raíces
+    g.fillStyle(0x8d8475, 1);
+    g.fillRect(10, 26, 6, 4); g.fillRect(40, 50, 7, 5); g.fillRect(24, 64, 5, 4);
+    g.fillStyle(0x52391f, 1);
+    g.fillRect(30, 20, 8, 2); g.fillRect(6, 46, 10, 2); g.fillRect(48, 30, 9, 2);
+    g.generateTexture('ground_sierra', w, h);
+    g.destroy();
+  }
+
+  // --- Bomba del helicóptero ---
+  genBomb() {
+    Pixel.sprite(this, 'bomb', 12, 20, (p) => {
+      p(0x44484e, 2, 0, 3, 4); p(0x44484e, 7, 0, 3, 4);   // aletas
+      p(0x2e3236, 3, 3, 6, 12);                            // cuerpo
+      p(0x5a5f64, 4, 4, 1, 10);                            // brillo
+      p(0xd23b2e, 3, 9, 6, 2);                             // franja roja
+      p(0x1c1e22, 3, 15, 6, 3); p(0x1c1e22, 4, 18, 4, 2);  // punta
+    });
+  }
+
+  // --- Cohete del chairo bazuca ---
+  genRocket() {
+    Pixel.sprite(this, 'rocket', 22, 8, (p) => {
+      p(0x3a3f45, 4, 2, 13, 4);                            // tubo
+      p(0x5a5f64, 4, 2, 13, 1);                            // brillo
+      p(0xd23b2e, 17, 1, 4, 6); p(0xff8a6a, 18, 2, 2, 2);  // punta roja
+      p(0x2a2d31, 0, 0, 4, 3); p(0x2a2d31, 0, 5, 4, 3);    // aletas
+    });
   }
 
   // --- Flecha indicadora de puntería ---
