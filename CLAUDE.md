@@ -66,8 +66,10 @@ Mover ← → / A D · Saltar W / Espacio · Disparar J / Z · Granada K · Paus
 - **Apuntar:** ↑ ↓ (combinadas con izq/der dan diagonales). Las balas salen en
   la dirección apuntada (8 vías, estilo Metal Slug). El tanque dispara fijo.
 - **Cuchillazo:** mismo botón de tiro cuando el enemigo está pegado (auto).
-- **Esquivar (rodada):** ↓ / stick-abajo **en el piso** => rueda con i-frames
-  (en el aire, ↓ apunta hacia abajo). Tiene cooldown. (`Player.startDodge`.)
+- **Agacharse:** ↓ **parada en el piso** => se agacha (pose propia, hitbox más
+  chica, dispara a ras de suelo). (`Player.setCrouch`.)
+- **Esquivar (rodada):** ↓ **mientras te mueves** en el piso => rueda con
+  i-frames (en el aire, ↓ apunta hacia abajo). Tiene cooldown. (`Player.startDodge`.)
 - **Móvil:** **joystick** analógico (abajo-izq.) — mover izq/der y **apuntar**
   empujándolo arriba/abajo — + botones TIRO, SALTO y 💣 a la derecha.
   En escritorio se fuerzan con `?touch=1` en la URL.
@@ -263,6 +265,17 @@ Al acabar munición vuelve a Escuadra.
     cuando te tiene debajo (`spawnHeloBomb`) y pide refuerzos; en furia va más
     rápido y manda machetes. Al morir cae girando entre explosiones.
     (`cfg.flying` en Boss.js / `updateFlying`.)
+
+## ✅ Arreglos (2026-06-10)
+44. **Crash al iniciar nivel (se "trababa" al elegir personaje)**: la intro de
+    misión usaba `.setScaleX(0)` encadenado en un rectángulo — los Shapes de
+    Phaser NO tienen ese método (es propiedad) → `GameScene.create()` tronaba
+    y el juego quedaba congelado. Fix: asignar `bar.scaleX = 0`. Detectado y
+    verificado con prueba E2E en Chromium headless (Playwright + Phaser local).
+45. **Agacharse estilo Metal Slug** (Ita y La Choco): ↓ **parada** = pose
+    agachada propia (frame `crouch` por código), hitbox baja (las balas altas
+    pasan por encima) y disparo a ras de suelo; ↓ **en movimiento** = la rodada
+    de siempre. Saltar la endereza. (`Player.setCrouch`; frames en CharacterArt.)
 
 ## 🔜 Por hacer / ideas
 - **Más variedad de jefes/ataques** (saltos, embestidas, proyectiles especiales).

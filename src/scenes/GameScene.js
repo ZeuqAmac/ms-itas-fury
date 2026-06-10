@@ -114,8 +114,10 @@ class GameScene extends Phaser.Scene {
   // Secuencia de entrada estilo arcade: "MISSION N" → "¡START!".
   missionIntro() {
     const cx = CONST.WIDTH / 2, cy = 150;
+    // OJO: los Shapes de Phaser no tienen setScaleX encadenable (es propiedad)
     const bar = this.add.rectangle(cx, cy, CONST.WIDTH, 86, 0x000000, 0.55)
-      .setScrollFactor(0).setDepth(2000).setScaleX(0);
+      .setScrollFactor(0).setDepth(2000);
+    bar.scaleX = 0;
     const title = this.add.text(cx, cy - 14, 'M I S S I O N  ' + (this.levelIndex + 1), {
       fontFamily: 'Trebuchet MS', fontStyle: 'bold', fontSize: '42px', color: '#ffffff',
       stroke: '#1a3a8a', strokeThickness: 7,

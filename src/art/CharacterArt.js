@@ -28,7 +28,7 @@ const CharacterArt = {
   _buildIta(scene) {
     const W = 34, H = 50;
     ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'up',
-      'updiag0', 'updiag1', 'updiag2', 'updiag3'].forEach(fr => {
+      'updiag0', 'updiag1', 'updiag2', 'updiag3', 'crouch'].forEach(fr => {
       this._sprite(scene, 'ita_' + fr, W, H, p => this._drawIta(p, fr));
     });
   },
@@ -43,6 +43,44 @@ const CharacterArt = {
     const gun = 0x242424, gunHi = 0x6e6e6e, wood = 0x6b3f1f, mag = 0x171717;
     const glove = 0x141414, eyeW = 0xf7f2ea, ink = 0x0a0a0a;
     const lip = 0xbe5566, teeth = 0xffffff, brow = 0x2a1a0e, blush = 0xe79a86, buckle = 0xd9b24a;
+
+    // --- pose agachada (↓ parada, estilo Metal Slug) ---
+    if (fr === 'crouch') {
+      // melena cae casi al suelo
+      p(hair, 2, 14, 11, 22); p(hair, 0, 20, 3, 12); p(hair, 4, 33, 9, 10);
+      p(hairMid, 3, 17, 4, 16); p(hairHi, 4, 20, 2, 10);
+      // pierna trasera doblada (rodilla al suelo) + empeine
+      p(camo, 9, 40, 8, 6); p(camoD, 9, 40, 2, 6); p(blot, 12, 42, 3, 2);
+      p(boot, 6, 44, 6, 5);
+      // pierna delantera plantada
+      p(camo, 18, 36, 7, 8); p(camoD, 18, 36, 2, 8); p(ink, 18, 41, 7, 1);
+      p(boot, 18, 44, 8, 5); p(bootHi, 18, 44, 8, 1);
+      // torso agachado: chaleco + top + cinturón
+      p(vest, 9, 25, 14, 14); p(vestMid, 9, 25, 14, 2); p(vestHi, 9, 25, 2, 14);
+      p(top, 13, 26, 6, 5); p(topHi, 13, 26, 2, 5);
+      p(ink, 12, 26, 1, 12); p(ink, 19, 26, 1, 12);
+      p(0x2a1d12, 9, 37, 14, 3); p(buckle, 14, 37, 4, 3);
+      // cabeza
+      p(skin, 14, 24, 4, 2);
+      p(skin, 11, 14, 12, 11);
+      p(skinSh, 20, 15, 3, 9); p(skinHi, 12, 15, 3, 4);
+      p(eyeW, 13, 18, 3, 3); p(ink, 14, 18, 2, 3);
+      p(eyeW, 18, 18, 3, 3); p(ink, 19, 18, 2, 3);
+      p(brow, 13, 16, 3, 1); p(brow, 18, 16, 3, 1);
+      p(lip, 14, 22, 6, 2); p(teeth, 15, 22, 4, 1);
+      // fleco
+      p(hair, 9, 10, 15, 6); p(hairMid, 10, 11, 13, 2); p(hairHi, 12, 10, 7, 1);
+      p(hair, 9, 15, 3, 6); p(hair, 22, 14, 3, 7);
+      // brazo + AK al frente (a ras)
+      p(skin, 19, 27, 4, 4); p(skin, 21, 29, 6, 3);
+      p(glove, 26, 29, 5, 3); p(0x2a2a2a, 26, 29, 5, 1);
+      p(wood, 16, 31, 5, 4);
+      p(gun, 20, 30, 3, 6);
+      p(gun, 21, 31, 13, 2); p(gunHi, 21, 31, 13, 1);
+      p(mag, 22, 33, 4, 5);
+      p(gun, 32, 30, 2, 2);
+      return;
+    }
 
     let bob = 0, lf = 0, lb = 0;
     if (fr === 'idle1') bob = 1;
@@ -143,7 +181,7 @@ const CharacterArt = {
   _buildChoco(scene) {
     const W = 34, H = 50;
     ['idle0', 'idle1', 'run0', 'run1', 'run2', 'run3', 'jump', 'up',
-      'updiag0', 'updiag1', 'updiag2', 'updiag3'].forEach(fr => {
+      'updiag0', 'updiag1', 'updiag2', 'updiag3', 'crouch'].forEach(fr => {
       this._sprite(scene, 'choco_' + fr, W, H, p => this._drawChoco(p, fr));
     });
   },
@@ -157,6 +195,42 @@ const CharacterArt = {
     const gun = 0x242424, gunHi = 0x6e6e6e, mag = 0x171717;
     const glove = 0x141414, eyeW = 0xf7f2ea, ink = 0x0a0a0a;
     const lip = 0xbe5566, teeth = 0xffffff, brow = 0x4a2f12, blush = 0xe79a86, zip = 0x9a7414;
+
+    // --- pose agachada (↓ parada, estilo Metal Slug) ---
+    if (fr === 'crouch') {
+      // melena rubia voluminosa cayendo
+      p(hair, 1, 13, 12, 24); p(hair, 0, 19, 3, 14); p(hair, 4, 34, 9, 9);
+      p(hairMid, 2, 16, 5, 18); p(hairHi, 3, 19, 2, 12);
+      // pierna trasera doblada (rodilla al suelo) + empeine
+      p(suit, 9, 40, 8, 6); p(suitSh, 9, 40, 2, 6); p(suitHi, 13, 41, 1, 4);
+      p(boot, 6, 44, 6, 5);
+      // pierna delantera plantada
+      p(suit, 18, 36, 7, 8); p(suitSh, 18, 36, 2, 8);
+      p(boot, 18, 44, 8, 5); p(bootHi, 18, 44, 8, 1);
+      // torso: top negro + mangas del overol amarradas
+      p(top, 9, 25, 14, 12); p(topMid, 9, 25, 14, 2); p(topHi, 9, 25, 2, 12);
+      p(suit, 8, 35, 16, 4); p(suitSh, 8, 37, 16, 2);
+      p(zip, 15, 26, 1, 9);
+      // cabeza
+      p(skin, 14, 24, 4, 2);
+      p(skin, 11, 14, 12, 11);
+      p(skinSh, 20, 15, 3, 9); p(skinHi, 12, 15, 3, 4);
+      p(eyeW, 13, 18, 3, 3); p(ink, 14, 18, 2, 3);
+      p(eyeW, 18, 18, 3, 3); p(ink, 19, 18, 2, 3);
+      p(brow, 13, 16, 3, 1); p(brow, 18, 16, 3, 1);
+      p(lip, 14, 22, 6, 2); p(teeth, 15, 22, 4, 1);
+      // fleco rizado
+      p(hair, 8, 10, 17, 6); p(hairMid, 9, 11, 15, 2); p(hairHi, 11, 10, 8, 1);
+      p(hair, 8, 15, 3, 7); p(hair, 22, 14, 4, 8);
+      // brazo + subfusil al frente (a ras)
+      p(skin, 19, 27, 4, 4); p(skin, 21, 29, 6, 3);
+      p(glove, 26, 29, 5, 3); p(0x2a2a2a, 26, 29, 5, 1);
+      p(gun, 20, 30, 4, 6);
+      p(gun, 22, 31, 11, 2); p(gunHi, 22, 31, 11, 1);
+      p(mag, 22, 33, 3, 5);
+      p(gun, 31, 30, 2, 2);
+      return;
+    }
 
     let bob = 0, lf = 0, lb = 0;
     if (fr === 'idle1') bob = 1;
@@ -592,11 +666,13 @@ const CharacterArt = {
     mk('ita-jump', ['ita_jump'], 1, 0);
     mk('ita-up', ['ita_up'], 1, 0);
     mk('ita-updiag', ['ita_updiag0', 'ita_updiag1', 'ita_updiag2', 'ita_updiag3'], 12, -1);
+    mk('ita-crouch', ['ita_crouch'], 1, 0);
     mk('choco-idle', ['choco_idle0', 'choco_idle1'], 3, -1);
     mk('choco-run', ['choco_run0', 'choco_run1', 'choco_run2', 'choco_run3'], 12, -1);
     mk('choco-jump', ['choco_jump'], 1, 0);
     mk('choco-up', ['choco_up'], 1, 0);
     mk('choco-updiag', ['choco_updiag0', 'choco_updiag1', 'choco_updiag2', 'choco_updiag3'], 12, -1);
+    mk('choco-crouch', ['choco_crouch'], 1, 0);
     mk('lucky-idle', ['lucky_idle0', 'lucky_idle1'], 4, -1);
     mk('lucky-walk', ['lucky_walk0', 'lucky_walk1'], 9, -1);
     mk('chairo-walk', ['chairo_walk0', 'chairo_walk1', 'chairo_walk2', 'chairo_walk3'], 8, -1);

@@ -42,6 +42,9 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.dodgeReadyAt = 0;
     this._downPrev = false;
 
+    // --- Agacharse (↓ parada, estilo Metal Slug) ---
+    this.crouching = false;
+
     // --- Vehículo (tanque) ---
     this.mode = 'foot';          // 'foot' | 'tank'
     this.shield = 0;             // blindaje del tanque
@@ -60,6 +63,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
   enterTank(silent) {
     if (this.mode === 'tank' || !this.active) return;
     this.mode = 'tank';
+    this.crouching = false;
     this.prevWeapon = (this.weapon !== 'canon') ? this.weapon : 'escuadra';
     this.weapon = 'canon';
     this.maxShield = 240; this.shield = 240;
@@ -128,15 +132,29 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     const onGround = this.body.blocked.down || this.body.touching.down;
     this.onGround = onGround;
     if (scene.btnJumpJust() && onGround) {
+      if (this.crouching) this.setCrouch(false);   // de agachada, parar y brincar
       this.setVelocityY(-CONST.PLAYER_JUMP);
       this.stretch();
       SFX.play('jump');
     }
 
-    // animación según estado (apuntar arriba tiene pose propia, estilo Metal Slug)
+    // Abajo en el piso (estilo Metal Slug): si te estás MOVIENDO ruedas con
+    // i-frames; si estás PARADA te agachas (en el aire, abajo apunta abajo).
+    const down = scene.aimDown();
+    const dodgeJust = down && !this._downPrev && vx !== 0;
+    this._downPrev = down;
+    if (onGround && dodgeJust && time >= this.dodgeReadyAt) {
+      if (this.crouching) this.setCrouch(false);
+      return this.startDodge(time);
+    }
+    const wantCrouch = down && onGround && vx === 0;
+    if (wantCrouch !== this.crouching) this.setCrouch(wantCrouch);
+
+    // animación según estado (agachada y apuntar arriba tienen pose propia)
     const aimingUp = scene.aimUp();
     const aimingDiag = aimingUp && vx !== 0;
-    if (aimingUp) this.anims.play(this.skin + (aimingDiag ? '-updiag' : '-up'), true);
+    if (this.crouching) this.anims.play(this.skin + '-crouch', true);
+    else if (aimingUp) this.anims.play(this.skin + (aimingDiag ? '-updiag' : '-up'), true);
     else if (!onGround) this.anims.play(this.skin + '-jump', true);
     else if (vx !== 0) this.anims.play(this.skin + '-run', true);
     else this.anims.play(this.skin + '-idle', true);
@@ -152,15 +170,6 @@ class Player extends Phaser.Physics.Arcade.Sprite {
       scene.spawnDust(this.x - this.dir * 14, this.y + 52, 1);
     }
     this.wasOnGround = onGround;
-
-    // Esquivar: al presionar ABAJO en el piso, el personaje rueda con
-    // invulnerabilidad breve (en el aire, abajo apunta hacia abajo).
-    const down = scene.aimDown();
-    const dodgeJust = down && !this._downPrev;
-    this._downPrev = down;
-    if (onGround && dodgeJust && time >= this.dodgeReadyAt) {
-      return this.startDodge(time);
-    }
 
     // Indicador de puntería (muestra la dirección al apuntar arriba/diagonal/abajo)
     this.updateAimMark();
@@ -185,6 +194,19 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.aimMark.setVisible(true)
       .setPosition(this.x + Math.cos(ang) * r, (this.y - 6) + Math.sin(ang) * r)
       .setRotation(ang);
+  }
+
+  // Agacharse / pararse: cambia pose y achica el cuerpo de colisión
+  // (las balas enemigas altas pasan por encima, estilo Metal Slug).
+  setCrouch(on) {
+    this.crouching = on;
+    if (on) {
+      this.body.setSize(14, 30);
+      this.body.setOffset(10, 19);
+    } else {
+      this.body.setSize(14, 45);
+      this.body.setOffset(10, 4);
+    }
   }
 
   // Inicia la rodada de esquive (i-frames + impulso horizontal + giro).
@@ -290,7 +312,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     const tank = this.mode === 'tank';
     const ang0 = this.aimAngle();
     const reach = tank ? 78 : 30;
-    const baseY = this.y - (tank ? 4 : 6);
+    // agachada el arma queda a ras del suelo
+    const baseY = tank ? this.y - 4 : this.crouching ? this.y + 14 : this.y - 6;
     const gx = this.x + Math.cos(ang0) * reach;
     const gy = baseY + Math.sin(ang0) * reach;
 
